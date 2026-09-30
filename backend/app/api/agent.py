@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import APIRouter, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, HTTPException, status
 from app.models.schemas import (
     AgentMessageRequest,
     AgentSessionStatus,
@@ -25,13 +25,11 @@ def get_agent_status(project_id: str):
 @router.post("/message")
 async def send_agent_message(
     project_id: str,
-    payload: AgentMessageRequest,
-    background_tasks: BackgroundTasks
+    payload: AgentMessageRequest
 ):
     """
-    Send a prompt/instruction to the Summit AI Agent.
-    Launches the agent reasoning & tool execution loop in the background,
-    streaming all events to WebSocket subscribers.
+    Send a prompt/instruction to the shared Summit AI Agent.
+    Launches agent reasoning & execution loop, streaming events to all room users.
     """
     project = project_service.get_project(project_id)
     if not project:
@@ -43,9 +41,13 @@ async def send_agent_message(
             detail="Agent is currently busy processing another task. Please wait or stop the session."
         )
 
-    # Launch agent task in background
     task = asyncio.create_task(
-        summit_adapter.run_session(project_id=project_id, user_prompt=payload.message)
+        summit_adapter.run_session(
+            project_id=project_id,
+            user_prompt=payload.message,
+            user_id=payload.user_id,
+            user_name=payload.display_name
+        )
     )
     session_manager.set_running_task(project_id, task)
 
@@ -58,7 +60,7 @@ async def send_agent_message(
 
 @router.post("/stop", response_model=AgentStopResponse)
 def stop_agent_session(project_id: str):
-    """Stops the active Summit agent execution."""
+    """Stops/cancels active Summit agent execution."""
     project = project_service.get_project(project_id)
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
@@ -67,3 +69,29 @@ def stop_agent_session(project_id: str):
     if stopped:
         return AgentStopResponse(success=True, message="Agent session stopped successfully.")
     return AgentStopResponse(success=False, message="No active agent session was running.")
+
+
+@router.post("/pause", response_model=AgentStopResponse)
+def pause_agent_session(project_id: str):
+    """Pauses active Summit agent execution."""
+    project = project_service.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    paused = session_manager.pause_session(project_id)
+    if paused:
+        return AgentStopResponse(success=True, message="Agent session paused.")
+    return AgentStopResponse(success=False, message="Could not pause (session not running or already paused).")
+
+
+@router.post("/resume", response_model=AgentStopResponse)
+def resume_agent_session(project_id: str):
+    """Resumes paused Summit agent execution."""
+    project = project_service.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    resumed = session_manager.resume_session(project_id)
+    if resumed:
+        return AgentStopResponse(success=True, message="Agent session resumed.")
+    return AgentStopResponse(success=False, message="Could not resume (session not paused).")

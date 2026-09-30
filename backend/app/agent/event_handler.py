@@ -7,9 +7,8 @@ from app.models.schemas import AppEvent, AppEventType, AgentStatusType
 
 class EventNormalizer:
     """
-    Normalizes internal Summit / OpenHands agent actions, observations,
-    and status transitions into clean, structured AppEvent payloads
-    consumed by the frontend WebSocket stream.
+    Normalizes agent actions, presence updates, file change events, and status transitions
+    into clean, structured AppEvent payloads consumed by the WebSocket stream.
     """
 
     @staticmethod
@@ -27,13 +26,40 @@ class EventNormalizer:
             data=data
         )
 
+    @staticmethod
+    def user_joined(project_id: str, user_id: str, display_name: str, connected_users: list) -> AppEvent:
+        return EventNormalizer.create_event(
+            project_id=project_id,
+            event_type=AppEventType.USER_JOINED,
+            data={
+                "user_id": user_id,
+                "display_name": display_name,
+                "connected_users": connected_users
+            }
+        )
 
     @staticmethod
-    def user_message(project_id: str, message: str) -> AppEvent:
+    def user_left(project_id: str, user_id: str, display_name: str, connected_users: list) -> AppEvent:
+        return EventNormalizer.create_event(
+            project_id=project_id,
+            event_type=AppEventType.USER_LEFT,
+            data={
+                "user_id": user_id,
+                "display_name": display_name,
+                "connected_users": connected_users
+            }
+        )
+
+    @staticmethod
+    def user_message(project_id: str, message: str, user_id: Optional[str] = None, user_name: Optional[str] = None) -> AppEvent:
         return EventNormalizer.create_event(
             project_id=project_id,
             event_type=AppEventType.USER_MESSAGE,
-            data={"message": message}
+            data={
+                "message": message,
+                "user_id": user_id,
+                "user_name": user_name or "Developer"
+            }
         )
 
     @staticmethod
@@ -108,14 +134,46 @@ class EventNormalizer:
     def file_changed(
         project_id: str,
         path: str,
-        change_type: str = "modified"
+        change_type: str = "modified",
+        version: Optional[int] = None
     ) -> AppEvent:
         return EventNormalizer.create_event(
             project_id=project_id,
             event_type=AppEventType.FILE_CHANGED,
             data={
                 "path": path.replace("\\", "/"),
-                "change_type": change_type
+                "change_type": change_type,
+                "version": version
+            }
+        )
+
+    @staticmethod
+    def file_created(project_id: str, path: str) -> AppEvent:
+        return EventNormalizer.create_event(
+            project_id=project_id,
+            event_type=AppEventType.FILE_CREATED,
+            data={"path": path.replace("\\", "/")}
+        )
+
+    @staticmethod
+    def file_deleted(project_id: str, path: str) -> AppEvent:
+        return EventNormalizer.create_event(
+            project_id=project_id,
+            event_type=AppEventType.FILE_DELETED,
+            data={"path": path.replace("\\", "/")}
+        )
+
+    @staticmethod
+    def file_conflict(project_id: str, path: str, server_version: int, expected_version: int, server_content: str) -> AppEvent:
+        return EventNormalizer.create_event(
+            project_id=project_id,
+            event_type=AppEventType.FILE_CONFLICT,
+            data={
+                "path": path.replace("\\", "/"),
+                "server_version": server_version,
+                "expected_version": expected_version,
+                "server_content": server_content,
+                "message": f"Conflict detected in {path}"
             }
         )
 
@@ -131,6 +189,29 @@ class EventNormalizer:
             data={
                 "message": message,
                 "thought": thought
+            }
+        )
+
+    @staticmethod
+    def memory_updated(project_id: str, key: str, value: str, category: str) -> AppEvent:
+        return EventNormalizer.create_event(
+            project_id=project_id,
+            event_type=AppEventType.MEMORY_UPDATED,
+            data={
+                "key": key,
+                "value": value,
+                "category": category
+            }
+        )
+
+    @staticmethod
+    def git_checkpoint(project_id: str, commit_hash: str, message: str) -> AppEvent:
+        return EventNormalizer.create_event(
+            project_id=project_id,
+            event_type=AppEventType.GIT_CHECKPOINT,
+            data={
+                "commit_hash": commit_hash,
+                "message": message
             }
         )
 

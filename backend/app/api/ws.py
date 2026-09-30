@@ -1,47 +1,45 @@
 import json
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from typing import Optional
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from app.agent.session_manager import session_manager
-from app.workspace.manager import WorkspaceSecurityError
 
 router = APIRouter(tags=["websocket"])
 logger = logging.getLogger("summit.ws")
 
 
 @router.websocket("/api/projects/{project_id}/agent/stream")
-@router.websocket("/ws/{project_id}")
-async def agent_event_stream(websocket: WebSocket, project_id: str):
+async def agent_event_stream(
+    websocket: WebSocket,
+    project_id: str,
+    user_id: Optional[str] = Query(None),
+    display_name: Optional[str] = Query(None)
+):
     """
-    WebSocket endpoint that streams real-time Summit agent events,
-    tool calls, terminal logs, file updates, and reasoning states to the UI.
+    WebSocket endpoint streaming real-time Summit events, tool calls, terminal logs,
+    file updates, memory updates, and user presence to all project collaborators.
     """
     await websocket.accept()
-    logger.info(f"WebSocket client connected for project: {project_id}")
+
+    uid = user_id or f"user_{id(websocket)}"
+    name = display_name or f"User-{uid[:4]}"
+
+    logger.info(f"WebSocket client connected: {name} ({uid}) for project: {project_id}")
 
     try:
-        # Register connection in session manager
-        await session_manager.register_connection(project_id, websocket)
+        await session_manager.register_connection(project_id, websocket, user_id=uid, display_name=name)
 
-        # Broadcast initial presence / status
-        await websocket.send_text(json.dumps({
-            "type": "presence_update",
-            "timestamp": "now",
-            "data": {"count": session_manager.get_active_connections_count(project_id)}
-        }))
-
-        # Keep connection open and handle incoming ping / client messages
         while True:
             data = await websocket.receive_text()
             try:
                 msg = json.loads(data)
-                # Handle client ping or client-initiated actions
                 if msg.get("type") == "ping":
                     await websocket.send_text(json.dumps({"type": "pong"}))
             except json.JSONDecodeError:
                 pass
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket client disconnected for project: {project_id}")
+        logger.info(f"WebSocket client disconnected: {name} for project: {project_id}")
     except Exception as e:
         logger.error(f"WebSocket error for project {project_id}: {e}")
     finally:

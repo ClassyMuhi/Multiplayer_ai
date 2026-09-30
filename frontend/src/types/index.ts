@@ -1,145 +1,100 @@
-export type AgentStatusType =
-  | 'IDLE'
-  | 'THINKING'
-  | 'EXECUTING'
-  | 'WAITING'
-  | 'COMPLETED'
-  | 'ERROR'
-  | 'STOPPED'
-  | 'idle'
-  | 'thinking'
-  | 'working'
-  | 'running_command'
-  | 'completed'
-  | 'stopped'
-  | 'error';
+export type AgentStatusType = 'IDLE' | 'THINKING' | 'EXECUTING' | 'WAITING' | 'PAUSED' | 'COMPLETED' | 'ERROR';
 
 export type AppEventType =
+  | 'user_joined'
+  | 'user_left'
   | 'user_message'
   | 'agent_status'
   | 'tool_call'
   | 'tool_result'
   | 'file_changed'
+  | 'file_created'
+  | 'file_deleted'
+  | 'file_conflict'
   | 'terminal_output'
   | 'agent_message'
   | 'error'
-  | 'agent_error'
   | 'session_complete'
-  | 'memory_saved'
-  | 'presence_update';
+  | 'memory_updated'
+  | 'git_checkpoint';
 
 export interface Project {
   id: string;
   name: string;
-  description?: string | null;
-  project_summary?: string | null;
   workspace_path: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface CreateProjectPayload {
-  name: string;
-  description?: string;
-  template?: string;
-  root_path?: string;
-}
-
-export interface ProjectListResponse {
-  projects: Project[];
-}
-
-export interface ProjectSummary {
-  project_id: string;
-  summary?: string | null;
-  content?: string | null;
-  updated_at?: string | null;
-}
-
 export interface FileNode {
   name: string;
-  path: string; // relative path inside workspace
+  path: string;
   is_directory: boolean;
-  size?: number | null;
-  children?: FileNode[] | null;
+  size?: number;
+  children?: FileNode[];
 }
+
 
 export interface FileContent {
   path: string;
   content: string;
   size: number;
   is_binary: boolean;
+  version: number;
 }
 
-export interface OpenFile {
-  path: string;
+export interface UserPresence {
+  user_id: string;
+  display_name: string;
+  connected_at: string;
+}
+
+export interface MessageRecord {
+  id: string;
+  project_id: string;
+  user_id?: string;
+  user_name?: string;
+  role: 'user' | 'assistant' | 'system';
   content: string;
-  originalContent: string;
-  isDirty: boolean;
+  timestamp: string;
 }
 
 export interface ProjectMemory {
   id: string;
   project_id: string;
-  memory_type?: string;
-  key?: string | null;
-  value?: string;
-  content?: string | null;
-  category?: string | null;
-  source?: string | null;
-  created_by?: string | null;
-  importance?: number | null;
-  similarity_score?: number | null;
-  is_active?: boolean;
+  category: string;
+  key: string;
+  value: string;
+  updated_at: string;
+}
+
+export interface GitStatus {
+  branch: string;
+  modified: string[];
+  staged: string[];
+  untracked: string[];
+  is_clean: boolean;
+}
+
+export interface GitCheckpoint {
+  id: string;
+  commit_hash: string;
+  message: string;
   created_at: string;
-  updated_at?: string;
-}
-
-export interface CreateMemoryPayload {
-  content: string;
-  category?: string;
-  importance?: number;
-  memory_type?: string;
-  key?: string;
-}
-
-export interface ToolExecution {
-  name: string;
-  input?: any;
-  output?: string;
-  status: 'running' | 'completed' | 'error';
-}
-
-export interface AgentSessionStatus {
-  status: AgentStatusType;
-  current_action?: string | null;
-  currentStep?: string | null;
-  activeCommand?: string | null;
-  active_tools?: string[];
-  updated_at?: string;
 }
 
 export interface AppEvent {
-  id?: string;
-  project_id?: string;
+  id: string;
+  project_id: string;
   type: AppEventType;
   timestamp: string;
-  data: any;
+  data: Record<string, any>;
 }
 
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: string;
-  userName?: string;
-  thought?: string;
-  toolExecutions?: ToolExecution[];
-}
-
-export interface DeveloperSession {
-  user_id: string;
-  user_name: string;
-  is_current_user?: boolean;
-  joined_at: string;
+export interface FileConflictData {
+  path: string;
+  server_version: number;
+  expected_version: number;
+  server_content: string;
+  message: string;
 }

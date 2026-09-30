@@ -1,34 +1,8 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-ENV/
-
-# Database & Storage
-data/
-*.db
-*.sqlite
-*.sqlite3
-
-# Workspaces (Temporary project sandboxes)
-workspaces/
-
-# Pytest / Coverage
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Environments
 .env
 .env.local
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
+*.pyc
+__pycache__/
+node_modules/
+dist/
+workspaces/
+.pytest_cache/

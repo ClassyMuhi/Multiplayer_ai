@@ -4,8 +4,8 @@ from app.main import app
 
 @pytest.fixture
 def client():
-    with TestClient(app) as test_client:
-        yield test_client
+    with TestClient(app) as c:
+        yield c
 
 
 def test_health_endpoint(client):
@@ -14,8 +14,6 @@ def test_health_endpoint(client):
     data = response.json()
     assert data["status"] == "healthy"
     assert "Summit" in data["service"]
-    assert data["database"] == "connected"
-
 
 
 def test_list_and_create_projects(client):

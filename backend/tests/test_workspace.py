@@ -67,10 +67,13 @@ async def test_read_and_write_file(temp_workspace_mgr):
     file_path = "src/hello.py"
     test_content = "print('hello from test')"
 
-    bytes_written = await temp_workspace_mgr.write_file(project_id, file_path, test_content)
+    bytes_written, new_ver = await temp_workspace_mgr.write_file(project_id, file_path, test_content)
     assert bytes_written > 0
+    assert new_ver >= 1
 
-    content, size, is_binary = await temp_workspace_mgr.read_file(project_id, file_path)
+    content, size, is_binary, version = await temp_workspace_mgr.read_file(project_id, file_path)
     assert content == test_content
     assert size == bytes_written
     assert not is_binary
+    assert version == new_ver
+

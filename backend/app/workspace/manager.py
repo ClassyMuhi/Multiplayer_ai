@@ -6,6 +6,7 @@ import aiofiles
 
 from app.core.config import settings
 from app.models.schemas import FileNode
+from app.database.repository import repository
 
 
 class WorkspaceSecurityError(Exception):
@@ -18,10 +19,23 @@ class WorkspaceNotFoundError(Exception):
     pass
 
 
+class FileConflictError(Exception):
+    """Raised when concurrent editing conflict is detected."""
+    def __init__(self, path: str, server_version: int, expected_version: int, server_content: str):
+        clean_path = path.replace("\\", "/")
+        super().__init__(
+            f"Conflict in '{clean_path}': server version is {server_version}, expected {expected_version}."
+        )
+        self.path = clean_path
+        self.server_version = server_version
+        self.expected_version = expected_version
+        self.server_content = server_content
+
+
 class WorkspaceManager:
     """
     Manages isolated project workspaces on the filesystem.
-    Enforces path traversal safety and performs file I/O operations.
+    Enforces path traversal safety, performs file I/O, file versioning, and conflict detection.
     """
 
     def __init__(self, root_path: Optional[Path] = None):
@@ -29,15 +43,10 @@ class WorkspaceManager:
         self.root_path.mkdir(parents=True, exist_ok=True)
 
     def get_workspace_dir(self, project_id: str) -> Path:
-        """
-        Returns the resolved workspace directory path for a project ID.
-        Validates that project_id cannot contain path traversal.
-        """
         if not project_id or ".." in project_id or "/" in project_id or "\\" in project_id:
             raise WorkspaceSecurityError(f"Invalid project ID: {project_id}")
 
         workspace_dir = (self.root_path / project_id).resolve()
-        # Verify workspace directory is within root_path
         try:
             workspace_dir.relative_to(self.root_path)
         except ValueError:
@@ -46,25 +55,18 @@ class WorkspaceManager:
         return workspace_dir
 
     def ensure_workspace(self, project_id: str) -> Path:
-        """Ensures the workspace exists on disk and returns its path."""
         workspace_dir = self.get_workspace_dir(project_id)
         workspace_dir.mkdir(parents=True, exist_ok=True)
         return workspace_dir
 
     def validate_safe_path(self, project_id: str, relative_path: str) -> Path:
-        """
-        Validates and resolves a relative path within the project workspace.
-        Raises WorkspaceSecurityError if the path escapes the workspace.
-        """
         workspace_dir = self.get_workspace_dir(project_id)
         if not workspace_dir.exists():
             raise WorkspaceNotFoundError(f"Workspace for project '{project_id}' does not exist.")
 
-        # Strip leading slashes to prevent root-relative interpretation
         clean_rel = relative_path.lstrip("/\\")
         target_path = (workspace_dir / clean_rel).resolve()
 
-        # Strict security check: target_path must have workspace_dir as parent/ancestor
         try:
             target_path.relative_to(workspace_dir)
         except ValueError:
@@ -75,17 +77,13 @@ class WorkspaceManager:
         return target_path
 
     def list_files_tree(self, project_id: str, max_depth: int = 10) -> List[FileNode]:
-        """
-        Recursively lists all files and directories in the workspace as a tree of FileNode.
-        Excludes hidden/virtualenv/git folders.
-        """
         workspace_dir = self.get_workspace_dir(project_id)
         if not workspace_dir.exists():
             raise WorkspaceNotFoundError(f"Workspace '{project_id}' does not exist.")
 
         ignored_names = {
             ".git", ".venv", "venv", "__pycache__", ".pytest_cache",
-            "node_modules", ".next", ".DS_Store"
+            "node_modules", ".next", ".DS_Store", ".summit"
         }
 
         def build_tree(current_dir: Path, current_depth: int) -> List[FileNode]:
@@ -129,41 +127,65 @@ class WorkspaceManager:
 
         return build_tree(workspace_dir, 1)
 
-    async def read_file(self, project_id: str, relative_path: str) -> Tuple[str, int, bool]:
-        """
-        Reads a file's content from the project workspace.
-        Returns (content_str, size_bytes, is_binary).
-        """
+    def get_file_version(self, project_id: str, relative_path: str) -> int:
+        clean_rel = relative_path.replace("\\", "/").lstrip("/")
+        return repository.get_file_version(project_id, clean_rel)
+
+    async def read_file(self, project_id: str, relative_path: str) -> Tuple[str, int, bool, int]:
+        """Reads a file and returns (content_str, size_bytes, is_binary, version)."""
         file_path = self.validate_safe_path(project_id, relative_path)
+        clean_rel = relative_path.replace("\\", "/").lstrip("/")
+
         if not file_path.exists() or not file_path.is_file():
             raise FileNotFoundError(f"File '{relative_path}' not found in project '{project_id}'.")
 
         size = file_path.stat().st_size
+        version = repository.get_file_version(project_id, clean_rel)
 
-        # Check for binary file
         try:
             async with aiofiles.open(file_path, mode="r", encoding="utf-8") as f:
                 content = await f.read()
-                return content, size, False
+                return content, size, False, version
         except UnicodeDecodeError:
-            # Fallback for binary files
-            return "<binary file content>", size, True
+            return "<binary file content>", size, True, version
 
-    async def write_file(self, project_id: str, relative_path: str, content: str) -> int:
+    async def write_file(
+        self,
+        project_id: str,
+        relative_path: str,
+        content: str,
+        expected_version: Optional[int] = None,
+        user_id: Optional[str] = None
+    ) -> Tuple[int, int]:
         """
-        Writes text content to a file in the workspace, creating parent directories if needed.
-        Returns the number of bytes written.
+        Writes text content to a file. Checks for version conflict if expected_version provided.
+        Returns (bytes_written, new_version).
         """
+        clean_rel = relative_path.replace("\\", "/").lstrip("/")
         file_path = self.validate_safe_path(project_id, relative_path)
+
+        # Conflict check if expected_version is provided and file exists
+        if expected_version is not None and file_path.exists():
+            current_version = repository.get_file_version(project_id, clean_rel)
+            if current_version != expected_version:
+                server_content, _, _, _ = await self.read_file(project_id, clean_rel)
+                raise FileConflictError(
+                    path=clean_rel,
+                    server_version=current_version,
+                    expected_version=expected_version,
+                    server_content=server_content
+                )
+
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         async with aiofiles.open(file_path, mode="w", encoding="utf-8") as f:
             await f.write(content)
 
-        return file_path.stat().st_size
+        new_version = repository.update_file_version(project_id, clean_rel, content, updated_by=user_id)
+        bytes_written = file_path.stat().st_size
+        return bytes_written, new_version
 
     def delete_file(self, project_id: str, relative_path: str) -> bool:
-        """Deletes a file or directory within the workspace."""
         file_path = self.validate_safe_path(project_id, relative_path)
         if not file_path.exists():
             return False
@@ -175,10 +197,8 @@ class WorkspaceManager:
         return True
 
     def init_demo_calculator_workspace(self, project_id: str) -> Path:
-        """Seeds a demo calculator project in the workspace."""
         workspace_dir = self.ensure_workspace(project_id)
 
-        # 1. calculator.py
         calc_content = '''"""
 Calculator Module for Summit AI Coding Agent Demo
 """
@@ -198,8 +218,8 @@ def multiply(a: float, b: float) -> float:
     return a * b
 '''
         (workspace_dir / "calculator.py").write_text(calc_content, encoding="utf-8")
+        repository.update_file_version(project_id, "calculator.py", calc_content)
 
-        # 2. tests/test_calculator.py
         tests_dir = workspace_dir / "tests"
         tests_dir.mkdir(exist_ok=True)
         test_content = '''"""
@@ -224,8 +244,8 @@ def test_multiply():
     assert multiply(-2, 4) == -8
 '''
         (tests_dir / "test_calculator.py").write_text(test_content, encoding="utf-8")
+        repository.update_file_version(project_id, "tests/test_calculator.py", test_content)
 
-        # 3. README.md
         readme_content = '''# Demo Calculator Project
 
 A sample Python project for testing the **Summit AI Coding Agent**.
@@ -233,14 +253,11 @@ A sample Python project for testing the **Summit AI Coding Agent**.
 ## Features
 - Basic math operations: `add`, `subtract`, `multiply`
 - Pytest test suite in `tests/test_calculator.py`
-
-## Try asking Summit:
-> "Add a divide function to calculator.py with zero division error handling and write tests for it in tests/test_calculator.py, then run pytest."
 '''
         (workspace_dir / "README.md").write_text(readme_content, encoding="utf-8")
+        repository.update_file_version(project_id, "README.md", readme_content)
 
         return workspace_dir
 
 
-# Global workspace manager instance
 workspace_manager = WorkspaceManager()
