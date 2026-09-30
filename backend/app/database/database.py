@@ -2,7 +2,7 @@ import os
 import logging
 from pathlib import Path
 from typing import Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session
 
 from app.core.config import settings
@@ -58,6 +58,25 @@ def init_db():
     import app.database.models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+
+    # Auto-migrate SQLite columns for existing databases
+    if settings.DATABASE_URL.startswith("sqlite"):
+        try:
+            with engine.connect() as conn:
+                cursor = conn.execute(text("PRAGMA table_info(projects)"))
+                columns = [row[1] for row in cursor.fetchall()]
+                if columns and "project_summary" not in columns:
+                    conn.execute(text("ALTER TABLE projects ADD COLUMN project_summary TEXT"))
+                    conn.commit()
+
+                cursor = conn.execute(text("PRAGMA table_info(project_memories)"))
+                mem_columns = [row[1] for row in cursor.fetchall()]
+                if mem_columns and "importance" not in mem_columns:
+                    conn.execute(text("ALTER TABLE project_memories ADD COLUMN importance FLOAT DEFAULT 0.5"))
+                    conn.commit()
+        except Exception as e:
+            logger.debug(f"SQLite auto-migration notice: {e}")
+
     logger.info("Database schema initialized successfully.")
 
 

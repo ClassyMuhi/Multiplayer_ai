@@ -35,9 +35,20 @@ class ProjectResponse(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
+    project_summary: Optional[str] = None
     workspace_path: str
     created_at: datetime
     updated_at: datetime
+
+
+class ProjectSummaryResponse(BaseModel):
+    project_id: str
+    summary: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
+
+class ProjectSummaryUpdate(BaseModel):
+    summary: str = Field(..., min_length=1, description="Structured project summary markdown/text")
 
 
 class ProjectListResponse(BaseModel):
@@ -82,6 +93,7 @@ class ProjectMemoryItem(BaseModel):
     source: Optional[str] = None
     created_by: Optional[str] = None
     is_active: bool = True
+    importance: Optional[float] = 0.5
     similarity_score: Optional[float] = None
     created_at: datetime
     updated_at: datetime
@@ -95,6 +107,7 @@ class ProjectMemoryCreate(BaseModel):
     key: Optional[str] = None
     source: Optional[str] = None
     created_by: Optional[str] = None
+    importance: Optional[float] = 0.5
 
 
 class MemorySearchRequest(BaseModel):
@@ -102,6 +115,24 @@ class MemorySearchRequest(BaseModel):
     top_k: Optional[int] = Field(5, ge=1, le=20, description="Max memories to retrieve")
     relevance_threshold: Optional[float] = Field(None, description="Optional distance threshold")
     category: Optional[str] = Field(None, description="Optional category filter")
+
+
+class RelevantFileContext(BaseModel):
+    path: str
+    content: str
+    size: int
+    score: Optional[float] = None
+
+
+class AgentContextPayload(BaseModel):
+    project_id: str
+    project_summary: Optional[str] = None
+    current_request: str
+    memories: List[ProjectMemoryItem] = []
+    project_tree: str = ""
+    relevant_files: List[RelevantFileContext] = []
+    recent_messages: List[MessageRecord] = []
+    formatted_prompt: str = ""
 
 
 

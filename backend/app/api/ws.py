@@ -9,6 +9,7 @@ logger = logging.getLogger("summit.ws")
 
 
 @router.websocket("/api/projects/{project_id}/agent/stream")
+@router.websocket("/ws/{project_id}")
 async def agent_event_stream(websocket: WebSocket, project_id: str):
     """
     WebSocket endpoint that streams real-time Summit agent events,
@@ -20,6 +21,13 @@ async def agent_event_stream(websocket: WebSocket, project_id: str):
     try:
         # Register connection in session manager
         await session_manager.register_connection(project_id, websocket)
+
+        # Broadcast initial presence / status
+        await websocket.send_text(json.dumps({
+            "type": "presence_update",
+            "timestamp": "now",
+            "data": {"count": session_manager.get_active_connections_count(project_id)}
+        }))
 
         # Keep connection open and handle incoming ping / client messages
         while True:

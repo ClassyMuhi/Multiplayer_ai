@@ -54,7 +54,8 @@ class DatabaseRepository:
         id: str,
         name: str,
         workspace_path: str,
-        description: Optional[str] = None
+        description: Optional[str] = None,
+        project_summary: Optional[str] = None
     ) -> Dict[str, Any]:
         """Creates or updates a project record in the database."""
         with self._session() as session:
@@ -64,6 +65,8 @@ class DatabaseRepository:
                 existing.workspace_path = workspace_path
                 if description is not None:
                     existing.description = description
+                if project_summary is not None:
+                    existing.project_summary = project_summary
                 existing.updated_at = utc_now()
                 project = existing
             else:
@@ -71,6 +74,7 @@ class DatabaseRepository:
                     id=id,
                     name=name,
                     description=description,
+                    project_summary=project_summary,
                     workspace_path=workspace_path,
                     created_at=utc_now(),
                     updated_at=utc_now()
@@ -81,6 +85,7 @@ class DatabaseRepository:
                 "id": project.id,
                 "name": project.name,
                 "description": project.description,
+                "project_summary": project.project_summary,
                 "workspace_path": project.workspace_path,
                 "created_at": project.created_at,
                 "updated_at": project.updated_at
@@ -96,6 +101,7 @@ class DatabaseRepository:
                 "id": project.id,
                 "name": project.name,
                 "description": project.description,
+                "project_summary": project.project_summary,
                 "workspace_path": project.workspace_path,
                 "created_at": project.created_at,
                 "updated_at": project.updated_at
@@ -111,6 +117,7 @@ class DatabaseRepository:
                     "id": p.id,
                     "name": p.name,
                     "description": p.description,
+                    "project_summary": p.project_summary,
                     "workspace_path": p.workspace_path,
                     "created_at": p.created_at,
                     "updated_at": p.updated_at
@@ -123,6 +130,7 @@ class DatabaseRepository:
         project_id: str,
         name: Optional[str] = None,
         description: Optional[str] = None,
+        project_summary: Optional[str] = None,
         workspace_path: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Updates fields of an existing project."""
@@ -134,6 +142,8 @@ class DatabaseRepository:
                 project.name = name
             if description is not None:
                 project.description = description
+            if project_summary is not None:
+                project.project_summary = project_summary
             if workspace_path is not None:
                 project.workspace_path = workspace_path
             project.updated_at = utc_now()
@@ -142,10 +152,21 @@ class DatabaseRepository:
                 "id": project.id,
                 "name": project.name,
                 "description": project.description,
+                "project_summary": project.project_summary,
                 "workspace_path": project.workspace_path,
                 "created_at": project.created_at,
                 "updated_at": project.updated_at
             }
+
+    def get_project_summary(self, project_id: str) -> Optional[str]:
+        """Retrieves only the project summary text for a project."""
+        with self._session() as session:
+            project = session.get(Project, project_id)
+            return project.project_summary if project else None
+
+    def update_project_summary(self, project_id: str, summary: str) -> Optional[Dict[str, Any]]:
+        """Updates the project summary for a project."""
+        return self.update_project(project_id=project_id, project_summary=summary)
 
     def delete_project(self, project_id: str) -> bool:
         """Deletes a project and all cascaded child records."""
@@ -522,6 +543,7 @@ class DatabaseRepository:
         key: Optional[str] = None,
         source: Optional[str] = None,
         created_by: Optional[str] = None,
+        importance: Optional[float] = 0.5,
         is_active: bool = True
     ) -> Dict[str, Any]:
         """
@@ -540,6 +562,8 @@ class DatabaseRepository:
                 existing.content = content
                 existing.memory_type = memory_type
                 existing.is_active = is_active
+                if importance is not None:
+                    existing.importance = importance
                 if source:
                     existing.source = source
                 if created_by:
@@ -552,6 +576,7 @@ class DatabaseRepository:
                     memory_type=memory_type,
                     key=key,
                     content=content,
+                    importance=importance if importance is not None else 0.5,
                     source=source,
                     created_by=created_by,
                     is_active=is_active,
@@ -572,6 +597,7 @@ class DatabaseRepository:
                 "source": mem.source,
                 "created_by": mem.created_by,
                 "is_active": mem.is_active,
+                "importance": mem.importance,
                 "created_at": mem.created_at,
                 "updated_at": mem.updated_at
             }
@@ -593,6 +619,7 @@ class DatabaseRepository:
                 "source": mem.source,
                 "created_by": mem.created_by,
                 "is_active": mem.is_active,
+                "importance": mem.importance,
                 "created_at": mem.created_at,
                 "updated_at": mem.updated_at
             }
@@ -602,14 +629,16 @@ class DatabaseRepository:
         project_id: str,
         key: str,
         value: str,
-        category: str = "general"
+        category: str = "general",
+        importance: Optional[float] = 0.5
     ) -> Dict[str, Any]:
         """Compatibility wrapper for ProjectMemory interface."""
         return self.save_project_memory(
             project_id=project_id,
             key=key,
             content=value,
-            memory_type=category
+            memory_type=category,
+            importance=importance
         )
 
     def get_project_memories(
@@ -642,6 +671,7 @@ class DatabaseRepository:
                     "source": m.source,
                     "created_by": m.created_by,
                     "is_active": m.is_active,
+                    "importance": m.importance,
                     "created_at": m.created_at,
                     "updated_at": m.updated_at
                 }
@@ -658,9 +688,10 @@ class DatabaseRepository:
         content: Optional[str] = None,
         value: Optional[str] = None,
         memory_type: Optional[str] = None,
+        importance: Optional[float] = None,
         is_active: Optional[bool] = None
     ) -> Optional[Dict[str, Any]]:
-        """Updates content, type, or active state of an existing memory item."""
+        """Updates content, type, importance, or active state of an existing memory item."""
         new_content = content or value
         with self._session() as session:
             mem = session.get(ProjectMemory, memory_id)
@@ -670,6 +701,8 @@ class DatabaseRepository:
                 mem.content = new_content
             if memory_type is not None:
                 mem.memory_type = memory_type
+            if importance is not None:
+                mem.importance = importance
             if is_active is not None:
                 mem.is_active = is_active
             mem.updated_at = utc_now()
@@ -685,6 +718,7 @@ class DatabaseRepository:
                 "source": mem.source,
                 "created_by": mem.created_by,
                 "is_active": mem.is_active,
+                "importance": mem.importance,
                 "created_at": mem.created_at,
                 "updated_at": mem.updated_at
             }

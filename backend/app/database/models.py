@@ -6,6 +6,7 @@ from sqlalchemy import (
     Text,
     DateTime,
     Boolean,
+    Float,
     ForeignKey,
     UniqueConstraint,
     Index
@@ -31,6 +32,7 @@ class Project(Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    project_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     workspace_path: Mapped[str] = mapped_column(String(512), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
@@ -171,6 +173,7 @@ class ProjectMemory(Base):
     memory_type: Mapped[str] = mapped_column(String(64), default="general", index=True)  # "architecture_decision", "project_fact", "coding_convention", "important_context", "general"
     key: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    importance: Mapped[Optional[float]] = mapped_column(Float, default=0.5, nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_by: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)

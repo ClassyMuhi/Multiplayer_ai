@@ -40,48 +40,67 @@ class MemoryExtractor:
                 return True
         return False
 
-    def extract_heuristic_memory(self, prompt: str, outcome_summary: str) -> Optional[Dict[str, Any]]:
+    def extract_heuristic_memory(
+        self,
+        prompt: str,
+        outcome_summary: str,
+        files_changed: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
         """
-        Extracts structured memory using pattern-matching heuristics on prompt and outcome.
+        Extracts structured memory using pattern-matching heuristics on prompt, outcome, and modified files.
         """
         p_lower = prompt.lower()
         s_lower = outcome_summary.lower()
+        files_str = ", ".join(files_changed) if files_changed else ""
 
         # Check for architecture/framework decisions
-        if any(term in p_lower for term in ["framework", "architecture", "database", "orm", "library", "stack"]):
+        if any(term in p_lower for term in ["framework", "architecture", "database", "orm", "library", "stack", "auth", "jwt", "token", "middleware", "security", "decision", "adopt", "fastapi", "django", "router", "endpoint"]):
+            content = f"Decision: {prompt.strip()} -> {outcome_summary.strip()[:200]}"
+            if files_str:
+                content += f" (Files: {files_str})"
             return {
                 "memory_type": "architecture_decision",
-                "content": f"Decision: {prompt.strip()} -> {outcome_summary.strip()[:200]}",
+                "content": content,
                 "importance": 0.85
             }
 
         # Check for conventions or patterns
         if any(term in p_lower for term in ["convention", "style", "format", "structure", "standard", "pattern"]):
+            content = f"Convention: {prompt.strip()} -> {outcome_summary.strip()[:200]}"
             return {
                 "memory_type": "coding_convention",
-                "content": f"Convention: {prompt.strip()} -> {outcome_summary.strip()[:200]}",
+                "content": content,
                 "importance": 0.8
             }
 
         # Check for bug solution / error handling
         if any(term in p_lower or term in s_lower for term in ["fix", "bug", "error", "exception", "failed", "crash"]):
+            content = f"Bug Resolution: {outcome_summary.strip()[:250]}"
             return {
                 "memory_type": "bug_solution",
-                "content": f"Bug Resolution: {outcome_summary.strip()[:250]}",
+                "content": content,
                 "importance": 0.75
             }
 
         # Check for significant feature additions
-        if any(term in p_lower for term in ["add", "implement", "create", "build"]):
+        if any(term in p_lower for term in ["add", "implement", "create", "build", "integrate", "configure", "setup", "introduce"]):
+            content = f"Implemented: {outcome_summary.strip()[:200]}"
+            if files_str:
+                content += f" [Files: {files_str}]"
             return {
                 "memory_type": "project_fact",
-                "content": f"Implemented: {outcome_summary.strip()[:200]}",
+                "content": content,
                 "importance": 0.7
             }
 
         return None
 
-    async def extract_llm_memory(self, prompt: str, outcome_summary: str) -> Optional[Dict[str, Any]]:
+    async def extract_llm_memory(
+        self,
+        prompt: str,
+        outcome_summary: str,
+        files_changed: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
         """
         Uses LLM with LiteLLM to extract structured memory if API key is present.
         """
@@ -92,7 +111,7 @@ class MemoryExtractor:
         import litellm
 
         system_instruction = (
-            "You are a Project Memory Extraction Engine. Analyze the developer instruction and outcome. "
+            "You are a Project Memory Extraction Engine. Analyze the developer instruction, modified files, and outcome. "
             "If it contains a lasting architecture decision, coding convention, project fact, or bug solution, "
             "extract it as JSON. If it's trivial (simple question, one-off test, ephemeral chat), return should_remember=false.\n"
             "JSON Format:\n"
@@ -104,7 +123,8 @@ class MemoryExtractor:
             "}"
         )
 
-        user_content = f"Developer prompt: {prompt}\nAgent outcome: {outcome_summary}"
+        files_info = f"\nFiles modified: {', '.join(files_changed)}" if files_changed else ""
+        user_content = f"Developer prompt: {prompt}\nAgent outcome: {outcome_summary}{files_info}"
 
         try:
             response = await litellm.acompletion(
@@ -133,10 +153,12 @@ class MemoryExtractor:
         project_id: str,
         user_prompt: str,
         outcome_summary: str,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
+        files_changed: Optional[List[str]] = None
     ) -> Optional[Dict[str, Any]]:
         """
         Coordinates extraction and persists any extracted memory to MemoryService.
+        Gracefully handles errors without failing the parent agent task.
         """
         if self.is_trivial(user_prompt):
             logger.debug(f"[MEMORY EXTRACTOR] Ignored trivial prompt: '{user_prompt}'")
@@ -146,17 +168,18 @@ class MemoryExtractor:
         extracted = None
         has_key = bool(settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OPENHANDS_API_KEY)
         if has_key:
-            extracted = await self.extract_llm_memory(user_prompt, outcome_summary)
+            extracted = await self.extract_llm_memory(user_prompt, outcome_summary, files_changed)
 
         # 2. Fall back to heuristic extraction
         if not extracted:
-            extracted = self.extract_heuristic_memory(user_prompt, outcome_summary)
+            extracted = self.extract_heuristic_memory(user_prompt, outcome_summary, files_changed)
 
         if not extracted or not extracted.get("content"):
             return None
 
         content = extracted["content"]
         mem_type = extracted.get("memory_type", "project_fact")
+        importance = extracted.get("importance", 0.7)
 
         try:
             saved = self.memory_svc.add_memory(
@@ -164,7 +187,8 @@ class MemoryExtractor:
                 content=content,
                 memory_type=mem_type,
                 source="agent_task_extraction",
-                created_by=user_id or "agent"
+                created_by=user_id or "agent",
+                importance=importance
             )
             logger.info(f"[MEMORY EXTRACTOR] Automatically saved memory for project={project_id}: '{content[:60]}...'")
             return saved.model_dump()

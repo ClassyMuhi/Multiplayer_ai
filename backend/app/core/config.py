@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     APP_NAME: str = "Summit AI Coding Workspace"
     APP_VERSION: str = "0.1.0"
 
+    # Context Builder & Project Intelligence Settings (Phase 3)
+    MAX_CONTEXT_FILES: int = 5
+    MAX_FILE_SIZE: int = 20000  # Max characters per file read into context
+    MAX_CONTEXT_CHARS: int = 50000  # Total prompt context budget
+    CONVERSATION_CONTEXT_LIMIT: int = 10  # Recent messages limit
+    PROJECT_SUMMARY_MAX_CHARS: int = 2500
+
 
 
     model_config = SettingsConfigDict(

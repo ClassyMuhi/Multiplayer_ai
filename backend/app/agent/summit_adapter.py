@@ -3,18 +3,18 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
 
 from app.core.config import settings
-from app.models.schemas import AgentStatusType
+from app.models.schemas import AgentStatusType, AgentContextPayload
 from app.agent.event_handler import EventNormalizer
 from app.agent.session_manager import session_manager
-from app.workspace.manager import workspace_manager
-from app.memory.memory_service import memory_service
-from app.memory.context_builder import context_builder
-from app.memory.memory_extractor import memory_extractor
+from app.workspace.manager import workspace_manager, WorkspaceManager
+from app.memory.memory_service import memory_service, MemoryService
+from app.memory.context_builder import context_builder, ContextBuilder
+from app.memory.memory_extractor import memory_extractor, MemoryExtractor
 from app.memory.conversation_memory import conversation_memory
-from app.database.repository import repository
+from app.database.repository import repository, DatabaseRepository
 
 
 logger = logging.getLogger("summit.adapter")
@@ -22,13 +22,29 @@ logger = logging.getLogger("summit.adapter")
 
 class SummitAdapter:
     """
-    Adapter responsible for orchestrating Summit coding agent execution,
-    tool invocations (file read/write/edit, terminal/pytest execution),
-    and streaming structured events to the UI.
+    Summit Coding Agent Adapter (Phase 3).
+    Orchestrates:
+    1. Context Builder integration (Project Summary, Memories, Files, Tree, Conversation).
+    2. Autonomous LLM or simulated tool calling loop (read_file, write_file, run_terminal).
+    3. FileChange recording in SQLite repository.
+    4. Real-time WebSocket event normalization and broadcasting.
+    5. Post-task memory extraction with modified files context.
+    6. Robust failure resilience and graceful degradation.
     """
 
-    def __init__(self):
-        self.workspace_mgr = workspace_manager
+    def __init__(
+        self,
+        workspace_mgr: Optional[WorkspaceManager] = None,
+        ctx_builder: Optional[ContextBuilder] = None,
+        repo: Optional[DatabaseRepository] = None,
+        mem_svc: Optional[MemoryService] = None,
+        extractor: Optional[MemoryExtractor] = None
+    ):
+        self.workspace_mgr = workspace_mgr or workspace_manager
+        self.ctx_builder = ctx_builder or context_builder
+        self.repo = repo or repository
+        self.mem_svc = mem_svc or memory_service
+        self.extractor = extractor or memory_extractor
 
     async def _broadcast(self, project_id: str, event):
         await session_manager.broadcast_event(project_id, event)
@@ -109,13 +125,17 @@ class SummitAdapter:
         project_id: str,
         workspace_dir: Path,
         user_prompt: str,
-        memory_context: str = ""
-    ) -> str:
+        memory_context: str = "",
+        user_id: Optional[str] = None,
+        context_payload: Optional[AgentContextPayload] = None
+    ) -> Tuple[str, List[str]]:
         """
         Integrates with LLM API (OpenAI/Anthropic/LiteLLM) to perform tool calling loop
-        augmented with persistent project memory context.
+        augmented with intelligent project context (Phase 3).
+        Returns (outcome_summary, files_modified_list).
         """
         import litellm
+        import json
 
         api_key = settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OPENHANDS_API_KEY
         model = settings.SUMMIT_MODEL
@@ -167,12 +187,17 @@ class SummitAdapter:
         ]
 
         system_instruction = (
-            "You are Summit AI, an autonomous expert coding agent. "
-            "You inspect the repository files, implement requested changes, "
-            "create or update tests, run pytest, and verify your changes before completing."
+            "You are Summit AI, an autonomous expert coding agent.\n"
+            "You inspect project context and files, implement requested changes, "
+            "create or update tests, run pytest in terminal, and verify your changes before completing."
         )
-        if memory_context:
-            system_instruction += f"\n\n{memory_context}"
+
+        if context_payload and context_payload.formatted_prompt:
+            prompt_content = context_payload.formatted_prompt
+        elif memory_context:
+            prompt_content = f"{memory_context}\n\nUser Request: {user_prompt}"
+        else:
+            prompt_content = user_prompt
 
         messages = [
             {
@@ -181,12 +206,14 @@ class SummitAdapter:
             },
             {
                 "role": "user",
-                "content": user_prompt
+                "content": prompt_content
             }
         ]
 
+        files_modified: List[str] = []
         last_agent_message = "Task completed."
         max_turns = 10
+
         for turn in range(max_turns):
             await self._broadcast(
                 project_id,
@@ -217,9 +244,7 @@ class SummitAdapter:
             # Check for tool calls
             tool_calls = getattr(msg, "tool_calls", None)
             if not tool_calls:
-                # No more tools called, agent finished
                 break
-
 
             await self._broadcast(
                 project_id,
@@ -234,7 +259,6 @@ class SummitAdapter:
 
             for tc in tool_calls:
                 fn_name = tc.function.name
-                import json
                 fn_args = json.loads(tc.function.arguments)
 
                 if fn_name == "read_file":
@@ -278,6 +302,22 @@ class SummitAdapter:
                         )
                     )
                     await self.workspace_mgr.write_file(project_id, rel_path, content)
+                    
+                    # Record FileChange in SQLite
+                    try:
+                        self.repo.record_file_change(
+                            project_id=project_id,
+                            file_path=rel_path,
+                            operation="modify",
+                            user_id=user_id,
+                            description=f"Modified by Summit AI Agent: {rel_path}"
+                        )
+                    except Exception as e:
+                        logger.warning(f"Could not record FileChange for {rel_path}: {e}")
+
+                    if rel_path not in files_modified:
+                        files_modified.append(rel_path)
+
                     await self._broadcast(
                         project_id,
                         EventNormalizer.file_changed(project_id=project_id, path=rel_path)
@@ -312,20 +352,23 @@ class SummitAdapter:
                         "content": f"Exit code: {exit_code}\nOutput:\n{output}"
                     })
 
-        return last_agent_message
+        return last_agent_message, files_modified
 
     async def _execute_autonomous_task(
         self,
         project_id: str,
         workspace_dir: Path,
         user_prompt: str,
-        memory_context: str = ""
+        memory_context: str = "",
+        user_id: Optional[str] = None,
+        context_payload: Optional[AgentContextPayload] = None
     ) -> str:
         """
-        Autonomous execution engine that performs real file operations and test runs
-        in the workspace matching the user prompt.
+        Autonomous execution engine that performs real file operations, test runs,
+        and records FileChanges in SQLite.
         """
         prompt_lower = user_prompt.lower()
+        files_modified: List[str] = []
 
         # Step 1: Inspect Workspace & Read Files
         await self._broadcast(
@@ -336,7 +379,7 @@ class SummitAdapter:
                 action="Inspecting project files..."
             )
         )
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.3)
 
         # Inspect calculator.py if relevant
         calc_path = "calculator.py"
@@ -360,7 +403,7 @@ class SummitAdapter:
                     success=True
                 )
             )
-            await asyncio.sleep(0.4)
+            await asyncio.sleep(0.3)
 
         # Step 2: Code Modification
         if "divide" in prompt_lower or "division" in prompt_lower:
@@ -409,11 +452,22 @@ def divide(a: float, b: float) -> float:
                 )
             )
             await self.workspace_mgr.write_file(project_id, "calculator.py", updated_calculator)
+            
+            # Record FileChange
+            self.repo.record_file_change(
+                project_id=project_id,
+                file_path="calculator.py",
+                operation="modify",
+                user_id=user_id,
+                description="Implemented divide function with zero division error handling"
+            )
+            files_modified.append("calculator.py")
+
             await self._broadcast(
                 project_id,
                 EventNormalizer.file_changed(project_id=project_id, path="calculator.py")
             )
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.3)
 
             # Step 3: Update Tests
             await self._broadcast(
@@ -468,11 +522,22 @@ def test_divide_by_zero():
                 )
             )
             await self.workspace_mgr.write_file(project_id, test_file_path, updated_tests)
+            
+            # Record FileChange
+            self.repo.record_file_change(
+                project_id=project_id,
+                file_path=test_file_path,
+                operation="modify",
+                user_id=user_id,
+                description="Added unit tests for divide and divide_by_zero"
+            )
+            files_modified.append(test_file_path)
+
             await self._broadcast(
                 project_id,
                 EventNormalizer.file_changed(project_id=project_id, path=test_file_path)
             )
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.3)
 
         # Step 4: Run Real Pytest in Terminal
         await self._broadcast(
@@ -511,8 +576,16 @@ def test_divide_by_zero():
     async def run_session(self, project_id: str, user_prompt: str, user_id: Optional[str] = None):
         """
         Main execution coordinator for a Summit agent session.
-        Integrates persistent conversation memory, semantic memory retrieval,
-        context building, execution, and post-task memory extraction.
+        Implements the complete Phase 3 pipeline:
+        1. Persist user message.
+        2. Create AgentRun in SQLite.
+        3. Build comprehensive project context (Summary, Memories, Tree, Files, Conversation).
+        4. Broadcast agent status and context intelligence.
+        5. Execute Agent with tool-calling loop (read/write/terminal).
+        6. Record FileChanges in SQLite.
+        7. Persist outcome to conversation history.
+        8. Extract long-term memory & architecture decisions (SQLite + ChromaDB).
+        9. Complete session and notify subscribers.
         """
         workspace_dir = self.workspace_mgr.get_workspace_dir(project_id)
         if not workspace_dir.exists():
@@ -523,9 +596,11 @@ def test_divide_by_zero():
             return
 
         run_record = None
+        files_modified_list: List[str] = []
+
         try:
             # 1. Save user message to persistent conversation history
-            conversation_memory.save_message(
+            self.repo.save_message(
                 project_id=project_id,
                 role="user",
                 content=user_prompt,
@@ -533,7 +608,7 @@ def test_divide_by_zero():
             )
 
             # 2. Record agent run in SQLite
-            run_record = repository.create_agent_run(
+            run_record = self.repo.create_agent_run(
                 project_id=project_id,
                 prompt=user_prompt,
                 initiated_by=user_id,
@@ -546,27 +621,36 @@ def test_divide_by_zero():
                 EventNormalizer.user_message(project_id=project_id, message=user_prompt)
             )
 
-            # 4. Semantic Memory Retrieval & Context Building
-            retrieved_memories = memory_service.search_memories(
-                project_id=project_id,
-                query=user_prompt,
-                top_k=settings.MEMORY_TOP_K
-            )
-            memory_context = context_builder.build_memory_context(retrieved_memories)
-
-            if retrieved_memories:
-                logger.info(f"[SUMMIT AGENT] Retrieved {len(retrieved_memories)} semantic memories for project={project_id}")
+            # 4. Phase 3: Intelligent Project Context Building with Graceful Degradation
+            context_payload: Optional[AgentContextPayload] = None
+            memory_context = ""
+            try:
+                context_payload = await self.ctx_builder.build_full_context(
+                    project_id=project_id,
+                    user_prompt=user_prompt,
+                    user_id=user_id
+                )
+                memory_context = self.ctx_builder.build_memory_context(context_payload.memories)
+                if context_payload.memories:
+                    logger.info(
+                        f"[AGENT] project={project_id} retrieved={len(context_payload.memories)} memories, "
+                        f"files={len(context_payload.relevant_files)}"
+                    )
+            except Exception as e:
+                logger.error(f"[CONTEXT] Context building failed gracefully ({e}), proceeding with raw prompt.")
 
             # 5. Check LLM API availability and execute
             has_api_key = bool(settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OPENHANDS_API_KEY)
 
             if has_api_key:
                 logger.info(f"Running LLM Agent for project: {project_id}")
-                outcome_summary = await self._execute_real_llm_agent(
+                outcome_summary, files_modified_list = await self._execute_real_llm_agent(
                     project_id=project_id,
                     workspace_dir=workspace_dir,
                     user_prompt=user_prompt,
-                    memory_context=memory_context
+                    memory_context=memory_context,
+                    user_id=user_id,
+                    context_payload=context_payload
                 )
             else:
                 logger.info(f"Running autonomous workspace engine for project: {project_id}")
@@ -574,11 +658,16 @@ def test_divide_by_zero():
                     project_id=project_id,
                     workspace_dir=workspace_dir,
                     user_prompt=user_prompt,
-                    memory_context=memory_context
+                    memory_context=memory_context,
+                    user_id=user_id,
+                    context_payload=context_payload
                 )
+                # Query recent file changes produced in this run
+                recent_changes = self.repo.get_project_file_changes(project_id=project_id, limit=5)
+                files_modified_list = [c["file_path"] for c in recent_changes]
 
             # 6. Save assistant outcome to persistent conversation history
-            conversation_memory.save_message(
+            self.repo.save_message(
                 project_id=project_id,
                 role="assistant",
                 content=outcome_summary
@@ -586,15 +675,19 @@ def test_divide_by_zero():
 
             # 7. Update agent run status in SQLite
             if run_record:
-                repository.update_agent_run(run_id=run_record["id"], status="completed")
+                self.repo.update_agent_run(run_id=run_record["id"], status="completed")
 
             # 8. Post-task Memory Extraction (Autonomous learning)
-            await memory_extractor.extract_and_save(
-                project_id=project_id,
-                user_prompt=user_prompt,
-                outcome_summary=outcome_summary,
-                user_id=user_id
-            )
+            try:
+                await self.extractor.extract_and_save(
+                    project_id=project_id,
+                    user_prompt=user_prompt,
+                    outcome_summary=outcome_summary,
+                    user_id=user_id,
+                    files_changed=files_modified_list
+                )
+            except Exception as e:
+                logger.warning(f"Memory extraction failed non-fatally: {e}")
 
             # 9. Mark session complete
             await self._broadcast(
@@ -613,7 +706,7 @@ def test_divide_by_zero():
         except asyncio.CancelledError:
             logger.info(f"Agent session cancelled for project: {project_id}")
             if run_record:
-                repository.update_agent_run(run_id=run_record["id"], status="stopped")
+                self.repo.update_agent_run(run_id=run_record["id"], status="stopped")
             await self._broadcast(
                 project_id,
                 EventNormalizer.agent_status(
@@ -625,7 +718,7 @@ def test_divide_by_zero():
         except Exception as e:
             logger.error(f"Error during agent session execution: {e}", exc_info=True)
             if run_record:
-                repository.update_agent_run(run_id=run_record["id"], status="failed")
+                self.repo.update_agent_run(run_id=run_record["id"], status="failed")
             await self._broadcast(
                 project_id,
                 EventNormalizer.error(project_id=project_id, error_message=str(e))
@@ -641,4 +734,3 @@ def test_divide_by_zero():
 
 
 summit_adapter = SummitAdapter()
-

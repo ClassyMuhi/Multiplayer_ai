@@ -76,6 +76,7 @@ class ProjectService:
                 id=p["id"],
                 name=p["name"],
                 description=p.get("description"),
+                project_summary=p.get("project_summary"),
                 workspace_path=p["workspace_path"],
                 created_at=p["created_at"],
                 updated_at=p["updated_at"]
@@ -108,10 +109,116 @@ class ProjectService:
             id=p["id"],
             name=p["name"],
             description=p.get("description"),
+            project_summary=p.get("project_summary"),
             workspace_path=p["workspace_path"],
             created_at=p["created_at"],
             updated_at=p["updated_at"]
         )
+
+    def generate_project_summary(self, project_id: str) -> str:
+        """
+        Generates a concise, structured project summary from real workspace assets:
+        - README file
+        - Workspace file structure
+        - Dependencies / tech stack configuration
+        - High-importance architecture decisions and project facts
+        """
+        project = self.repo.get_project(project_id)
+        proj_name = project.get("name", project_id) if project else project_id
+        proj_desc = (project.get("description") or "").strip() if project else ""
+
+        summary_parts = []
+        summary_parts.append(f"Project: {proj_name}")
+        if proj_desc:
+            summary_parts.append(f"Description: {proj_desc}")
+
+        workspace_dir = self.workspace_mgr.ensure_workspace(project_id)
+
+        # 1. Inspect README
+        readme_candidates = ["README.md", "readme.md", "README.txt", "README"]
+        for r_name in readme_candidates:
+            r_file = workspace_dir / r_name
+            if r_file.exists() and r_file.is_file():
+                try:
+                    content = r_file.read_text(encoding="utf-8", errors="ignore").strip()
+                    if content:
+                        # Extract first few non-empty paragraphs
+                        paragraphs = [p.strip() for p in content.split("\n\n") if p.strip()]
+                        readme_snippet = "\n".join(paragraphs[:3])
+                        if len(readme_snippet) > 600:
+                            readme_snippet = readme_snippet[:597] + "..."
+                        summary_parts.append(f"Overview (from README):\n{readme_snippet}")
+                        break
+                except Exception:
+                    pass
+
+        # 2. Inspect Tech Stack & Config Files
+        tech_stack = []
+        if (workspace_dir / "requirements.txt").exists():
+            tech_stack.append("Python (requirements.txt)")
+        if (workspace_dir / "pyproject.toml").exists():
+            tech_stack.append("Python (pyproject.toml)")
+        if (workspace_dir / "package.json").exists():
+            tech_stack.append("Node.js / JavaScript (package.json)")
+        if (workspace_dir / "tsconfig.json").exists():
+            tech_stack.append("TypeScript (tsconfig.json)")
+        if (workspace_dir / "Dockerfile").exists():
+            tech_stack.append("Docker containerization")
+
+        # Check for pytest or tests dir
+        if (workspace_dir / "tests").is_dir() or (workspace_dir / "pytest.ini").exists():
+            tech_stack.append("Pytest test suite")
+
+        if tech_stack:
+            summary_parts.append("Technology & Tooling: " + ", ".join(tech_stack))
+
+        # 3. Structure Summary
+        try:
+            tree_nodes = self.workspace_mgr.list_files_tree(project_id, max_depth=2)
+            top_entries = [node.name + ("/" if node.is_directory else "") for node in tree_nodes[:12]]
+            if top_entries:
+                summary_parts.append("Key Structure: " + ", ".join(top_entries))
+        except Exception:
+            pass
+
+        # 4. Include Key Architecture Memories from Database
+        try:
+            key_mems = self.repo.get_project_memories(project_id=project_id, active_only=True)
+            arch_mems = [m for m in key_mems if m.get("memory_type") in ("architecture_decision", "project_fact", "coding_convention")]
+            if arch_mems:
+                mem_lines = [f"- {m['content'][:150]}" for m in arch_mems[:4]]
+                summary_parts.append("Established Architecture & Rules:\n" + "\n".join(mem_lines))
+        except Exception:
+            pass
+
+        full_summary = "\n\n".join(summary_parts)
+        max_chars = settings.PROJECT_SUMMARY_MAX_CHARS
+        if len(full_summary) > max_chars:
+            full_summary = full_summary[:max_chars - 3] + "..."
+
+        # Persist to SQLite
+        self.repo.update_project_summary(project_id=project_id, summary=full_summary)
+        return full_summary
+
+    def get_project_summary(self, project_id: str) -> Optional[str]:
+        """Retrieves or lazily generates project summary for a given project."""
+        summary = self.repo.get_project_summary(project_id)
+        if not summary:
+            # Generate summary if project exists
+            p = self.repo.get_project(project_id)
+            if p:
+                summary = self.generate_project_summary(project_id)
+        return summary
+
+    def update_project_summary(self, project_id: str, summary: str) -> Optional[ProjectResponse]:
+        """Manually updates the project summary."""
+        clean_summary = summary.strip()
+        self.repo.update_project_summary(project_id=project_id, summary=clean_summary)
+        return self.get_project(project_id)
+
+    def refresh_project_summary(self, project_id: str) -> str:
+        """Forces regeneration of the project summary from workspace and memories."""
+        return self.generate_project_summary(project_id)
 
     def create_project(
         self,
@@ -119,7 +226,7 @@ class ProjectService:
         template: Optional[str] = "demo-calculator",
         description: Optional[str] = None
     ) -> ProjectResponse:
-        """Creates a new project record in DB and sets up the workspace."""
+        """Creates a new project record in DB, sets up workspace, and generates summary."""
         slug = "".join(c if c.isalnum() else "-" for c in name.lower()).strip("-")
         if not slug:
             slug = "project"
@@ -138,10 +245,12 @@ class ProjectService:
             workspace_path=str(workspace_dir.resolve())
         )
         self._save_project_metadata(project_id, name)
+        # Generate initial summary
+        self.generate_project_summary(project_id)
         return self.get_project(project_id)  # type: ignore
 
     def ensure_default_demo_project(self) -> str:
-        """Ensures the demo calculator project exists in both database and filesystem."""
+        """Ensures the demo calculator project exists in both database and filesystem with summary."""
         demo_id = "demo-calculator"
         demo_path = self.workspace_mgr.root_path / demo_id
         if not demo_path.exists():
@@ -154,8 +263,10 @@ class ProjectService:
             description="Default demo project for Summit AI",
             workspace_path=str(demo_path.resolve())
         )
+        # Ensure summary exists
+        if not self.repo.get_project_summary(demo_id):
+            self.generate_project_summary(demo_id)
         return demo_id
-
 
 
 project_service = ProjectService()

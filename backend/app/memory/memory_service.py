@@ -27,7 +27,8 @@ class MemoryService:
         memory_type: str = "project_fact",
         key: Optional[str] = None,
         source: Optional[str] = "manual",
-        created_by: Optional[str] = None
+        created_by: Optional[str] = None,
+        importance: Optional[float] = 0.5
     ) -> ProjectMemoryItem:
         """
         Adds a persistent project memory.
@@ -57,7 +58,8 @@ class MemoryService:
                         project_id=project_id,
                         memory_id=doc_id,
                         content=clean_content,
-                        memory_type=memory_type
+                        memory_type=memory_type,
+                        importance=importance
                     )
                     if updated:
                         return updated
@@ -72,6 +74,7 @@ class MemoryService:
             key=key,
             source=source,
             created_by=created_by,
+            importance=importance,
             is_active=True
         )
 
@@ -84,6 +87,7 @@ class MemoryService:
             "key": key or memory_id,
             "source": source or "manual",
             "created_by": created_by or "system",
+            "importance": float(importance if importance is not None else 0.5),
             "created_at": record["created_at"].isoformat() if hasattr(record["created_at"], "isoformat") else str(record["created_at"])
         }
 
@@ -189,6 +193,7 @@ class MemoryService:
         memory_id: str,
         content: str,
         memory_type: Optional[str] = None,
+        importance: Optional[float] = None,
         is_active: Optional[bool] = None
     ) -> Optional[ProjectMemoryItem]:
         """Updates a memory in both SQLite and ChromaDB."""
@@ -197,6 +202,7 @@ class MemoryService:
             memory_id=memory_id,
             content=clean_content,
             memory_type=memory_type,
+            importance=importance,
             is_active=is_active
         )
         if not record:
@@ -210,6 +216,7 @@ class MemoryService:
                 "key": record.get("key") or memory_id,
                 "source": record.get("source") or "manual",
                 "created_by": record.get("created_by") or "system",
+                "importance": float(record.get("importance") or 0.5),
                 "created_at": str(record["created_at"])
             }
             self.chroma.update_document(
@@ -260,6 +267,7 @@ class MemoryService:
                 "key": r.get("key") or r["id"],
                 "source": r.get("source") or "sqlite_sync",
                 "created_by": r.get("created_by") or "system",
+                "importance": float(r.get("importance") or 0.5),
                 "created_at": str(r["created_at"])
             }
             content = r.get("content") or r.get("value") or ""

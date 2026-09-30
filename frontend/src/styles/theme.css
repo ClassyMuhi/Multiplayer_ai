@@ -1,0 +1,66 @@
+:root {
+  /* VS Code Dark Modern Colors */
+  --bg-app: #0d1117;
+  --bg-topbar: #090d13;
+  --bg-sidebar: #161b22;
+  --bg-editor: #0d1117;
+  --bg-panel: #161b22;
+  --bg-activity-bar: #090d13;
+  --bg-statusbar: #1f242c;
+  --bg-tabs: #090d13;
+  --bg-tab-active: #0d1117;
+  --bg-tab-inactive: #090d13;
+  --bg-tab-hover: #161b22;
+  --bg-card: #161b22;
+  --bg-card-hover: #1f242c;
+  --bg-input: #090d13;
+  --bg-input-focus: #161b22;
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-badge: #21262d;
+  --bg-terminal: #090d13;
+
+  /* Borders */
+  --border-subtle: #21262d;
+  --border-default: #30363d;
+  --border-focus: #58a6ff;
+  --border-active: #6366f1;
+
+  /* Text & Foreground */
+  --text-primary: #f0f6fc;
+  --text-secondary: #c9d1d9;
+  --text-muted: #8b949e;
+  --text-disabled: #484f58;
+  --text-link: #58a6ff;
+
+  /* Accent & Status Colors */
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-cyan: #06b6d4;
+  --accent-blue: #38bdf8;
+  --accent-green: #238636;
+  --accent-green-bright: #3fb950;
+  --accent-amber: #d29922;
+  --accent-rose: #f85149;
+  --accent-purple: #bc8cff;
+
+  /* Status Colors */
+  --status-ready: #3fb950;
+  --status-thinking: #bc8cff;
+  --status-executing: #38bdf8;
+  --status-error: #f85149;
+  --status-stopped: #8b949e;
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, 'Courier New', monospace;
+
+  /* Sizing & Layout */
+  --topbar-height: 40px;
+  --statusbar-height: 24px;
+  --activity-bar-width: 48px;
+  --sidebar-width: 250px;
+  --ai-panel-width: 360px;
+  --tab-height: 35px;
+  --tabs-height: 35px;
+  --bottom-panel-height: 220px;
+}
