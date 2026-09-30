@@ -10,6 +10,12 @@ from app.models.schemas import AgentStatusType
 from app.agent.event_handler import EventNormalizer
 from app.agent.session_manager import session_manager
 from app.workspace.manager import workspace_manager
+from app.memory.memory_service import memory_service
+from app.memory.context_builder import context_builder
+from app.memory.memory_extractor import memory_extractor
+from app.memory.conversation_memory import conversation_memory
+from app.database.repository import repository
+
 
 logger = logging.getLogger("summit.adapter")
 
@@ -98,9 +104,16 @@ class SummitAdapter:
             )
             return -1, err_msg
 
-    async def _execute_real_llm_agent(self, project_id: str, workspace_dir: Path, user_prompt: str):
+    async def _execute_real_llm_agent(
+        self,
+        project_id: str,
+        workspace_dir: Path,
+        user_prompt: str,
+        memory_context: str = ""
+    ) -> str:
         """
-        Integrates with LLM API (OpenAI/Anthropic/LiteLLM) to perform tool calling loop.
+        Integrates with LLM API (OpenAI/Anthropic/LiteLLM) to perform tool calling loop
+        augmented with persistent project memory context.
         """
         import litellm
 
@@ -153,14 +166,18 @@ class SummitAdapter:
             }
         ]
 
+        system_instruction = (
+            "You are Summit AI, an autonomous expert coding agent. "
+            "You inspect the repository files, implement requested changes, "
+            "create or update tests, run pytest, and verify your changes before completing."
+        )
+        if memory_context:
+            system_instruction += f"\n\n{memory_context}"
+
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You are Summit AI, an autonomous expert coding agent. "
-                    "You inspect the repository files, implement requested changes, "
-                    "create or update tests, run pytest, and verify your changes before completing."
-                )
+                "content": system_instruction
             },
             {
                 "role": "user",
@@ -168,6 +185,7 @@ class SummitAdapter:
             }
         ]
 
+        last_agent_message = "Task completed."
         max_turns = 10
         for turn in range(max_turns):
             await self._broadcast(
@@ -190,6 +208,7 @@ class SummitAdapter:
             msg = choice.message
 
             if msg.content:
+                last_agent_message = msg.content
                 await self._broadcast(
                     project_id,
                     EventNormalizer.agent_message(project_id=project_id, message=msg.content)
@@ -200,6 +219,7 @@ class SummitAdapter:
             if not tool_calls:
                 # No more tools called, agent finished
                 break
+
 
             await self._broadcast(
                 project_id,
@@ -292,7 +312,15 @@ class SummitAdapter:
                         "content": f"Exit code: {exit_code}\nOutput:\n{output}"
                     })
 
-    async def _execute_autonomous_task(self, project_id: str, workspace_dir: Path, user_prompt: str):
+        return last_agent_message
+
+    async def _execute_autonomous_task(
+        self,
+        project_id: str,
+        workspace_dir: Path,
+        user_prompt: str,
+        memory_context: str = ""
+    ) -> str:
         """
         Autonomous execution engine that performs real file operations and test runs
         in the workspace matching the user prompt.
@@ -478,10 +506,13 @@ def test_divide_by_zero():
                 message=summary
             )
         )
+        return summary
 
-    async def run_session(self, project_id: str, user_prompt: str):
+    async def run_session(self, project_id: str, user_prompt: str, user_id: Optional[str] = None):
         """
         Main execution coordinator for a Summit agent session.
+        Integrates persistent conversation memory, semantic memory retrieval,
+        context building, execution, and post-task memory extraction.
         """
         workspace_dir = self.workspace_mgr.get_workspace_dir(project_id)
         if not workspace_dir.exists():
@@ -491,24 +522,81 @@ def test_divide_by_zero():
             )
             return
 
+        run_record = None
         try:
-            # 1. Emit user message
+            # 1. Save user message to persistent conversation history
+            conversation_memory.save_message(
+                project_id=project_id,
+                role="user",
+                content=user_prompt,
+                user_id=user_id
+            )
+
+            # 2. Record agent run in SQLite
+            run_record = repository.create_agent_run(
+                project_id=project_id,
+                prompt=user_prompt,
+                initiated_by=user_id,
+                status="running"
+            )
+
+            # 3. Emit user message to WebSocket subscribers
             await self._broadcast(
                 project_id,
                 EventNormalizer.user_message(project_id=project_id, message=user_prompt)
             )
 
-            # Check if LLM API key is present
+            # 4. Semantic Memory Retrieval & Context Building
+            retrieved_memories = memory_service.search_memories(
+                project_id=project_id,
+                query=user_prompt,
+                top_k=settings.MEMORY_TOP_K
+            )
+            memory_context = context_builder.build_memory_context(retrieved_memories)
+
+            if retrieved_memories:
+                logger.info(f"[SUMMIT AGENT] Retrieved {len(retrieved_memories)} semantic memories for project={project_id}")
+
+            # 5. Check LLM API availability and execute
             has_api_key = bool(settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OPENHANDS_API_KEY)
 
             if has_api_key:
                 logger.info(f"Running LLM Agent for project: {project_id}")
-                await self._execute_real_llm_agent(project_id, workspace_dir, user_prompt)
+                outcome_summary = await self._execute_real_llm_agent(
+                    project_id=project_id,
+                    workspace_dir=workspace_dir,
+                    user_prompt=user_prompt,
+                    memory_context=memory_context
+                )
             else:
                 logger.info(f"Running autonomous workspace engine for project: {project_id}")
-                await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
+                outcome_summary = await self._execute_autonomous_task(
+                    project_id=project_id,
+                    workspace_dir=workspace_dir,
+                    user_prompt=user_prompt,
+                    memory_context=memory_context
+                )
 
-            # Mark session complete
+            # 6. Save assistant outcome to persistent conversation history
+            conversation_memory.save_message(
+                project_id=project_id,
+                role="assistant",
+                content=outcome_summary
+            )
+
+            # 7. Update agent run status in SQLite
+            if run_record:
+                repository.update_agent_run(run_id=run_record["id"], status="completed")
+
+            # 8. Post-task Memory Extraction (Autonomous learning)
+            await memory_extractor.extract_and_save(
+                project_id=project_id,
+                user_prompt=user_prompt,
+                outcome_summary=outcome_summary,
+                user_id=user_id
+            )
+
+            # 9. Mark session complete
             await self._broadcast(
                 project_id,
                 EventNormalizer.agent_status(
@@ -524,6 +612,8 @@ def test_divide_by_zero():
 
         except asyncio.CancelledError:
             logger.info(f"Agent session cancelled for project: {project_id}")
+            if run_record:
+                repository.update_agent_run(run_id=run_record["id"], status="stopped")
             await self._broadcast(
                 project_id,
                 EventNormalizer.agent_status(
@@ -534,6 +624,8 @@ def test_divide_by_zero():
             )
         except Exception as e:
             logger.error(f"Error during agent session execution: {e}", exc_info=True)
+            if run_record:
+                repository.update_agent_run(run_id=run_record["id"], status="failed")
             await self._broadcast(
                 project_id,
                 EventNormalizer.error(project_id=project_id, error_message=str(e))
@@ -549,3 +641,4 @@ def test_divide_by_zero():
 
 
 summit_adapter = SummitAdapter()
+

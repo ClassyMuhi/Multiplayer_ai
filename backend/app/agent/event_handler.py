@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from app.models.schemas import AppEvent, AppEventType, AgentStatusType
@@ -23,9 +23,10 @@ class EventNormalizer:
             id=event_id or str(uuid.uuid4()),
             project_id=project_id,
             type=event_type,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             data=data
         )
+
 
     @staticmethod
     def user_message(project_id: str, message: str) -> AppEvent:

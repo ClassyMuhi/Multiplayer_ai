@@ -27,12 +27,14 @@ class AppEventType(str, Enum):
 
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Project display name")
+    description: Optional[str] = Field(None, description="Optional project description")
     template: Optional[str] = Field("demo-calculator", description="Initial project template to seed")
 
 
 class ProjectResponse(BaseModel):
     id: str
     name: str
+    description: Optional[str] = None
     workspace_path: str
     created_at: datetime
     updated_at: datetime
@@ -40,6 +42,88 @@ class ProjectResponse(BaseModel):
 
 class ProjectListResponse(BaseModel):
     projects: List[ProjectResponse]
+
+
+class UserCreate(BaseModel):
+    display_name: str = Field(..., min_length=1, max_length=100)
+
+
+class UserResponse(BaseModel):
+    id: str
+    display_name: str
+    created_at: datetime
+
+
+class ProjectMemberResponse(BaseModel):
+    id: str
+    project_id: str
+    user_id: str
+    joined_at: datetime
+
+
+class MessageRecord(BaseModel):
+    id: str
+    project_id: str
+    role: str
+    content: str
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    created_at: datetime
+
+
+class ProjectMemoryItem(BaseModel):
+    id: str
+    project_id: str
+    memory_type: str = "general"
+    key: Optional[str] = None
+    value: str
+    content: Optional[str] = None
+    category: Optional[str] = "general"
+    source: Optional[str] = None
+    created_by: Optional[str] = None
+    is_active: bool = True
+    similarity_score: Optional[float] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ProjectMemoryCreate(BaseModel):
+    content: Optional[str] = None
+    value: Optional[str] = None
+    memory_type: Optional[str] = "general"
+    category: Optional[str] = "general"
+    key: Optional[str] = None
+    source: Optional[str] = None
+    created_by: Optional[str] = None
+
+
+class MemorySearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, description="Semantic search query")
+    top_k: Optional[int] = Field(5, ge=1, le=20, description="Max memories to retrieve")
+    relevance_threshold: Optional[float] = Field(None, description="Optional distance threshold")
+    category: Optional[str] = Field(None, description="Optional category filter")
+
+
+
+class AgentRunResponse(BaseModel):
+    id: str
+    project_id: str
+    prompt: str
+    initiated_by: Optional[str] = None
+    status: str
+    started_at: datetime
+    completed_at: Optional[datetime] = None
+
+
+class FileChangeRecord(BaseModel):
+    id: str
+    project_id: str
+    file_path: str
+    operation: str
+    user_id: Optional[str] = None
+    description: Optional[str] = None
+    created_at: datetime
+
 
 
 class FileNode(BaseModel):

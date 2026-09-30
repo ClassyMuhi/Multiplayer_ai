@@ -1,8 +1,9 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Set, Optional
 from fastapi import WebSocket
+
 
 from app.models.schemas import (
     AgentStatusType,
@@ -96,8 +97,9 @@ class SessionManager:
             project_id=project_id,
             status=status,
             active_tools=active_tools,
-            updated_at=datetime.utcnow()
+            updated_at=datetime.now(timezone.utc)
         )
+
 
     def set_status(self, project_id: str, status: AgentStatusType):
         self._status[project_id] = status

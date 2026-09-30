@@ -2,18 +2,23 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
-client = TestClient(app)
+@pytest.fixture
+def client():
+    with TestClient(app) as test_client:
+        yield test_client
 
 
-def test_health_endpoint():
+def test_health_endpoint(client):
     response = client.get("/api/health")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
     assert "Summit" in data["service"]
+    assert data["database"] == "connected"
 
 
-def test_list_and_create_projects():
+
+def test_list_and_create_projects(client):
     # List projects (startup should have initialized demo-calculator)
     response = client.get("/api/projects")
     assert response.status_code == 200
@@ -34,7 +39,7 @@ def test_list_and_create_projects():
     assert get_res.json()["id"] == new_id
 
 
-def test_file_operations_api():
+def test_file_operations_api(client):
     project_id = "demo-calculator"
 
     # List files
@@ -63,10 +68,11 @@ def test_file_operations_api():
     assert "Updated calculator" in verify_res.json()["content"]
 
 
-def test_agent_status_api():
+def test_agent_status_api(client):
     project_id = "demo-calculator"
     status_res = client.get(f"/api/projects/{project_id}/agent/status")
     assert status_res.status_code == 200
     data = status_res.json()
     assert data["project_id"] == project_id
     assert "status" in data
+
