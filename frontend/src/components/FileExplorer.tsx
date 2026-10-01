@@ -113,6 +113,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   return (
     <div style={{
       width: '240px',
+      minWidth: '240px',
+      flexShrink: 0,
       backgroundColor: 'var(--bg-panel)',
       borderRight: '1px solid var(--border-color)',
       display: 'flex',

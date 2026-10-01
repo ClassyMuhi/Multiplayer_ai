@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Project, UserPresence } from '../types';
-import { Sparkles, Users, FolderGit2, Plus, UserCheck } from 'lucide-react';
+import { Sparkles, Users, FolderGit2, Plus, UserCheck, PanelLeft, PanelRight } from 'lucide-react';
 
 
 interface ProjectHeaderProps {
@@ -11,6 +11,10 @@ interface ProjectHeaderProps {
   connectedUsers: UserPresence[];
   currentUser: { userId: string; displayName: string };
   onSwitchUser: (userId: string, displayName: string) => void;
+  showExplorer?: boolean;
+  onToggleExplorer?: () => void;
+  showAgentPanel?: boolean;
+  onToggleAgentPanel?: () => void;
 }
 
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
@@ -20,7 +24,11 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   onCreateProject,
   connectedUsers,
   currentUser,
-  onSwitchUser
+  onSwitchUser,
+  showExplorer = true,
+  onToggleExplorer,
+  showAgentPanel = true,
+  onToggleAgentPanel
 }) => {
   const [showNewModal, setShowNewModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
@@ -48,6 +56,21 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     }}>
       {/* Left: Branding & Project Selector */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        {onToggleExplorer && (
+          <button
+            className={`btn ${showExplorer ? 'btn-secondary' : ''}`}
+            onClick={onToggleExplorer}
+            title={showExplorer ? 'Hide File Explorer' : 'Show File Explorer'}
+            style={{
+              padding: '0.3rem 0.5rem',
+              backgroundColor: showExplorer ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-card)',
+              color: showExplorer ? 'var(--accent-blue)' : 'var(--text-muted)'
+            }}
+          >
+            <PanelLeft size={16} />
+          </button>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Sparkles size={20} color="var(--accent-blue)" />
           <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.02em', background: 'linear-gradient(to right, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -76,8 +99,22 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         </div>
       </div>
 
-      {/* Right: Presence & Multi-User Switcher */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      {/* Right: Presence & Multi-User Switcher & Agent Toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {onToggleAgentPanel && (
+          <button
+            className={`btn ${showAgentPanel ? 'btn-secondary' : ''}`}
+            onClick={onToggleAgentPanel}
+            title={showAgentPanel ? 'Hide AI Agent Panel' : 'Show AI Agent Panel'}
+            style={{
+              padding: '0.3rem 0.5rem',
+              backgroundColor: showAgentPanel ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-card)',
+              color: showAgentPanel ? 'var(--accent-blue)' : 'var(--text-muted)'
+            }}
+          >
+            <PanelRight size={16} />
+          </button>
+        )}
         {/* User Identity Switcher */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'var(--bg-card)', padding: '0.2rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
           <UserCheck size={14} color="var(--accent-green)" />

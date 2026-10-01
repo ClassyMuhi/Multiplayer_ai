@@ -99,11 +99,58 @@ class SummitAdapter:
             )
             return -1, err_msg
 
-    async def _execute_real_llm_agent(self, project_id: str, workspace_dir: Path, user_prompt: str):
+    async def _execute_real_llm_agent(
+        self,
+        project_id: str,
+        workspace_dir: Path,
+        user_prompt: str,
+        model_override: Optional[str] = None
+    ):
         import litellm
 
-        api_key = settings.api_key
-        model = settings.model_name
+        # Set environment variables for all configured provider keys
+        if settings.GROQ_API_KEY:
+            os.environ["GROQ_API_KEY"] = settings.GROQ_API_KEY
+        if settings.GEMINI_API_KEY:
+            os.environ["GEMINI_API_KEY"] = settings.GEMINI_API_KEY
+        if settings.OPENAI_API_KEY:
+            os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
+        if settings.ANTHROPIC_API_KEY:
+            os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
+
+        model = model_override or settings.model_name
+
+        if model == "autonomous":
+            await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
+            return
+
+        # Fallback to configured keys if model is not set
+        if not model or (model == "gpt-4o" and not settings.OPENAI_API_KEY):
+            if settings.GROQ_API_KEY:
+                model = "groq/openai/gpt-oss-120b"
+            elif settings.GEMINI_API_KEY:
+                model = "gemini/gemini-2.0-flash"
+
+        # Map unavailable/deprecated Groq models to the available GPT-OSS 120B model on this Groq account
+        if settings.GROQ_API_KEY and ("llama" in model.lower() or model in ("groq/llama-3.3-70b-versatile", "groq/llama-3.1-8b-instant", "groq/llama3-70b-8192")):
+            model = "groq/openai/gpt-oss-120b"
+
+        # Handle gpt-oss models hosted on Groq
+        if ("gpt-oss" in model or "oss-120b" in model or "oss-20b" in model or "qwen3.8" in model) and settings.GROQ_API_KEY:
+            if not model.startswith("groq/"):
+                model = f"groq/{model}"
+
+        # Explicit key selection based on model family
+        if model.startswith("groq/"):
+            api_key = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
+        elif model.startswith("gemini/"):
+            api_key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
+        elif model.startswith("openai/") or model.startswith("gpt-"):
+            api_key = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
+        elif model.startswith("anthropic/") or model.startswith("claude"):
+            api_key = settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY")
+        else:
+            api_key = settings.api_key
 
         tools = [
             {
@@ -642,7 +689,14 @@ def health():
             return False
         return True
 
-    async def run_session(self, project_id: str, user_prompt: str, user_id: Optional[str] = None, user_name: Optional[str] = None):
+    async def run_session(
+        self,
+        project_id: str,
+        user_prompt: str,
+        user_id: Optional[str] = None,
+        user_name: Optional[str] = None,
+        model_override: Optional[str] = None
+    ):
         workspace_dir = self.workspace_mgr.get_workspace_dir(project_id)
         if not workspace_dir.exists():
             await self._broadcast(project_id, EventNormalizer.error(project_id=project_id, error_message=f"Workspace '{project_id}' not found."))
@@ -655,10 +709,13 @@ def health():
                 EventNormalizer.user_message(project_id=project_id, message=user_prompt, user_id=user_id, user_name=user_name)
             )
 
-            if self._has_valid_api_key():
-                logger.info(f"Running LLM Agent for project: {project_id}")
+            if model_override == "autonomous":
+                logger.info(f"Running built-in autonomous engine for project: {project_id}")
+                await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
+            elif self._has_valid_api_key():
+                logger.info(f"Running LLM Agent for project: {project_id} (model: {model_override or settings.model_name})")
                 try:
-                    await self._execute_real_llm_agent(project_id, workspace_dir, user_prompt)
+                    await self._execute_real_llm_agent(project_id, workspace_dir, user_prompt, model_override)
                 except Exception as llm_err:
                     logger.warning(f"LLM agent failed ({llm_err}), falling back to Summit Autonomous Engine.")
                     await self._broadcast(

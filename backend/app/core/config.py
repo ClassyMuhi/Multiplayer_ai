@@ -16,9 +16,15 @@ class Settings(BaseSettings):
     AI_MODEL: Optional[str] = None
     AI_API_KEY: Optional[str] = None
     SUMMIT_MODEL: str = "gpt-4o"
+    GROQ_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
     OPENHANDS_API_KEY: Optional[str] = None
+
+    # Chroma Vector DB Settings
+    CHROMA_PERSIST_DIR: str = "./data/chroma"
+    CHROMA_COLLECTION_NAME: str = "summit_memories"
 
     # App Settings
     APP_NAME: str = "Summit AI Coding Workspace"
@@ -32,7 +38,14 @@ class Settings(BaseSettings):
 
     @property
     def api_key(self) -> Optional[str]:
-        return self.AI_API_KEY or self.OPENAI_API_KEY or self.ANTHROPIC_API_KEY or self.OPENHANDS_API_KEY
+        return (
+            self.AI_API_KEY
+            or self.GROQ_API_KEY
+            or self.GEMINI_API_KEY
+            or self.OPENAI_API_KEY
+            or self.ANTHROPIC_API_KEY
+            or self.OPENHANDS_API_KEY
+        )
 
     @property
     def model_name(self) -> str:
@@ -43,6 +56,13 @@ class Settings(BaseSettings):
         path = Path(self.SUMMIT_WORKSPACE_ROOT)
         if not path.is_absolute():
             # Resolve relative to project backend root
+            return Path.cwd() / path
+        return path
+
+    @property
+    def chroma_persist_path(self) -> Path:
+        path = Path(self.CHROMA_PERSIST_DIR)
+        if not path.is_absolute():
             return Path.cwd() / path
         return path
 

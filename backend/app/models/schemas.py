@@ -113,6 +113,7 @@ class AgentMessageRequest(BaseModel):
     message: str = Field(..., min_length=1, description="Instruction or query for Summit agent")
     user_id: Optional[str] = None
     display_name: Optional[str] = None
+    model: Optional[str] = Field(None, description="Optional LLM model override (e.g. groq/llama-3.3-70b-versatile, gemini/gemini-2.0-flash)")
 
 
 class MessageRecord(BaseModel):

@@ -44,6 +44,9 @@ export const App: React.FC = () => {
   const [gitDiff, setGitDiff] = useState<string | null>(null);
   const [conflictData, setConflictData] = useState<FileConflictData | null>(null);
 
+  const [showExplorer, setShowExplorer] = useState(true);
+  const [showAgentPanel, setShowAgentPanel] = useState(true);
+
   const wsRef = useRef<WebSocket | null>(null);
 
   // Initial load projects
@@ -259,10 +262,10 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async (msg: string) => {
+  const handleSendMessage = async (msg: string, model?: string) => {
     if (!currentProject) return;
     try {
-      await api.sendAgentMessage(currentProject.id, msg, currentUser.userId, currentUser.displayName);
+      await api.sendAgentMessage(currentProject.id, msg, currentUser.userId, currentUser.displayName, model);
     } catch (e: any) {
       alert(e.message);
     }
@@ -336,22 +339,28 @@ export const App: React.FC = () => {
         connectedUsers={connectedUsers}
         currentUser={currentUser}
         onSwitchUser={(userId, displayName) => setCurrentUser({ userId, displayName })}
+        showExplorer={showExplorer}
+        onToggleExplorer={() => setShowExplorer(!showExplorer)}
+        showAgentPanel={showAgentPanel}
+        onToggleAgentPanel={() => setShowAgentPanel(!showAgentPanel)}
       />
 
       {/* Main Workspace Layout */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         {/* Left: File Explorer */}
-        <FileExplorer
-          files={files}
-          activePath={activeFile?.path || null}
-          onSelectFile={(p) => currentProject && openFile(currentProject.id, p)}
-          onCreateFile={handleCreateFile}
-          onDeleteFile={handleDeleteFile}
-          onRefresh={() => currentProject && api.fetchFiles(currentProject.id).then(setFiles)}
-        />
+        {showExplorer && (
+          <FileExplorer
+            files={files}
+            activePath={activeFile?.path || null}
+            onSelectFile={(p) => currentProject && openFile(currentProject.id, p)}
+            onCreateFile={handleCreateFile}
+            onDeleteFile={handleDeleteFile}
+            onRefresh={() => currentProject && api.fetchFiles(currentProject.id).then(setFiles)}
+          />
+        )}
 
         {/* Center: Editor + Memory Drawer + Git Panel */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           {/* Memory Notes Drawer */}
           <MemoryPanel
             memories={memories}
@@ -368,7 +377,6 @@ export const App: React.FC = () => {
             hasIndexHtml={files.some((f) => f.name === 'index.html' || f.path.endsWith('index.html'))}
           />
 
-
           {/* Bottom Git Status Bar */}
           <GitPanel
             status={gitStatus}
@@ -379,15 +387,17 @@ export const App: React.FC = () => {
         </div>
 
         {/* Right: Multiplayer AI Chat & Event Stream Panel */}
-        <AgentPanel
-          status={agentStatus}
-          events={events}
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          onStop={() => currentProject && api.stopAgent(currentProject.id)}
-          onPause={() => currentProject && api.pauseAgent(currentProject.id)}
-          onResume={() => currentProject && api.resumeAgent(currentProject.id)}
-        />
+        {showAgentPanel && (
+          <AgentPanel
+            status={agentStatus}
+            events={events}
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            onStop={() => currentProject && api.stopAgent(currentProject.id)}
+            onPause={() => currentProject && api.pauseAgent(currentProject.id)}
+            onResume={() => currentProject && api.resumeAgent(currentProject.id)}
+          />
+        )}
       </div>
 
       {/* Concurrent Editing Conflict Resolution Modal */}

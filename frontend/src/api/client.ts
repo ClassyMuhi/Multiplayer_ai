@@ -144,12 +144,13 @@ export async function sendAgentMessage(
   projectId: string,
   message: string,
   userId?: string,
-  displayName?: string
+  displayName?: string,
+  model?: string
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/projects/${projectId}/agent/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, user_id: userId, display_name: displayName })
+    body: JSON.stringify({ message, user_id: userId, display_name: displayName, model })
   });
   if (!res.ok) {
     const data = await res.json();

@@ -1,13 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { AgentStatusType, AppEvent, MessageRecord } from '../types';
-import { Bot, Send, Pause, Play, Square, Terminal, Wrench, FileEdit, AlertCircle } from 'lucide-react';
+import { Bot, Send, Pause, Play, Square, Terminal, Wrench, FileEdit, AlertCircle, Cpu } from 'lucide-react';
 
+export const AVAILABLE_MODELS = [
+  { id: 'groq/openai/gpt-oss-120b', label: '⚡ Groq: GPT-OSS 120B (Active on your account)' },
+  { id: 'groq/openai/gpt-oss-20b', label: '⚡ Groq: GPT-OSS 20B (Fast)' },
+  { id: 'groq/qwen/qwen3.8-27b', label: '⚡ Groq: Qwen 3.8 27B' },
+  { id: 'gemini/gemini-2.0-flash', label: '🌟 Gemini: 2.0 Flash' },
+  { id: 'gemini/gemini-1.5-flash', label: '🌟 Gemini: 1.5 Flash' },
+  { id: 'gpt-4o', label: '🧠 OpenAI: GPT-4o' },
+  { id: 'autonomous', label: '🤖 Built-in Autonomous Engine' },
+  { id: 'custom', label: '⚙️ Custom Model ID...' }
+];
 
 interface AgentPanelProps {
   status: AgentStatusType;
   events: AppEvent[];
   messages: MessageRecord[];
-  onSendMessage: (msg: string) => void;
+  onSendMessage: (msg: string, model?: string) => void;
   onStop: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -23,16 +33,39 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   onResume
 }) => {
   const [prompt, setPrompt] = useState('');
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    const saved = localStorage.getItem('summit_selected_model');
+    if (saved && !saved.includes('llama') && saved !== 'groq/llama-3.3-70b-versatile') {
+      return saved;
+    }
+    return 'groq/openai/gpt-oss-120b';
+  });
+  const [customModel, setCustomModel] = useState<string>(() => {
+    return localStorage.getItem('summit_custom_model') || 'groq/openai/gpt-oss-120b';
+  });
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [events, messages]);
 
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelectedModel(val);
+    localStorage.setItem('summit_selected_model', val);
+  };
+
+  const handleCustomModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setCustomModel(val);
+    localStorage.setItem('summit_custom_model', val);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (prompt.trim()) {
-      onSendMessage(prompt.trim());
+      const activeModel = selectedModel === 'custom' ? customModel.trim() : selectedModel;
+      onSendMessage(prompt.trim(), activeModel);
       setPrompt('');
     }
   };
@@ -57,6 +90,8 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   return (
     <div style={{
       width: '380px',
+      minWidth: '320px',
+      flexShrink: 0,
       backgroundColor: 'var(--bg-panel)',
       borderLeft: '1px solid var(--border-color)',
       display: 'flex',
@@ -94,6 +129,53 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
             </button>
           )}
         </div>
+      </div>
+
+      {/* Model Selector Bar */}
+      <div style={{
+        padding: '0.45rem 0.8rem',
+        borderBottom: '1px solid var(--border-color)',
+        backgroundColor: 'rgba(15, 23, 42, 0.4)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.35rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <Cpu size={13} color="var(--accent-blue)" style={{ flexShrink: 0 }} />
+          <select
+            value={selectedModel}
+            onChange={handleModelChange}
+            style={{
+              flex: 1,
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '5px',
+              fontSize: '0.75rem',
+              padding: '0.25rem 0.4rem',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+            title="Choose AI Model Provider"
+          >
+            {AVAILABLE_MODELS.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {selectedModel === 'custom' && (
+          <input
+            type="text"
+            className="input"
+            style={{ fontSize: '0.725rem', padding: '0.2rem 0.4rem' }}
+            placeholder="e.g. groq/openai/gpt-oss-120b"
+            value={customModel}
+            onChange={handleCustomModelChange}
+          />
+        )}
       </div>
 
       {/* Stream & History */}
