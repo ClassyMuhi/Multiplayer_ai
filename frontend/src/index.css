@@ -1,33 +1,71 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-dark: #07090e;
-  --bg-canvas: #0d111a;
-  --bg-panel: #131927;
-  --bg-panel-header: #182032;
-  --bg-card: #1c263c;
-  --bg-card-hover: #253350;
-  --border-subtle: #1e293b;
-  --border-bright: #334155;
-  --border-focus: #0ea5e9;
+  /* VSCodium Authentic Dark Theme Palette */
+  --vscode-bg-editor: #1e1e1e;
+  --vscode-bg-sidebar: #252526;
+  --vscode-bg-activitybar: #181818;
+  --vscode-bg-topbar: #1f1f1f;
+  --vscode-bg-statusbar: #007acc;
+  --vscode-bg-statusbar-offline: #68217a;
+  --vscode-bg-panel: #1e1e1e;
+  --vscode-bg-panel-header: #252526;
+  
+  --vscode-bg-tab-active: #1e1e1e;
+  --vscode-bg-tab-inactive: #2d2d2d;
+  --vscode-bg-tab-hover: #323232;
+  
+  --vscode-bg-card: #252526;
+  --vscode-bg-card-hover: #2a2d2e;
+  --vscode-bg-card-active: #094771;
+  
+  --vscode-bg-input: #3c3c3c;
+  --vscode-bg-input-focus: #3c3c3c;
+  --vscode-bg-terminal: #181818;
+  
+  /* Borders */
+  --vscode-border: #333333;
+  --vscode-border-light: #3c3c3c;
+  --vscode-border-focus: #007acc;
+  --vscode-border-active: #007acc;
+  
+  /* Text */
+  --vscode-text-primary: #cccccc;
+  --vscode-text-secondary: #969696;
+  --vscode-text-muted: #6e6e6e;
+  --vscode-text-link: #3794ff;
+  --vscode-text-white: #ffffff;
+  
+  /* Accents */
+  --vscode-accent: #007acc;
+  --vscode-accent-hover: #0098ff;
+  --vscode-accent-cyan: #4ec9b0;
+  --vscode-accent-blue: #569cd6;
+  --vscode-accent-purple: #c586c0;
+  --vscode-accent-yellow: #dcdcaa;
+  --vscode-accent-orange: #ce9178;
+  --vscode-accent-green: #6a9955;
+  --vscode-accent-red: #f14c4c;
+  --vscode-accent-amber: #cca700;
 
-  --accent-cyan: #0ea5e9;
-  --accent-blue: #38bdf8;
-  --accent-purple: #a855f7;
-  --accent-pink: #ec4899;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  /* Legacy variables mapped to VSCodium */
+  --bg-dark: #1e1e1e;
+  --bg-panel: #252526;
+  --bg-card: #2a2d2e;
+  --border-color: #333333;
+  --border-bright: #3c3c3c;
+  --text-main: #cccccc;
+  --text-muted: #969696;
+  --text-dim: #6e6e6e;
+  --accent-blue: #007acc;
+  --accent-green: #4ec9b0;
+  --accent-purple: #c586c0;
+  --accent-amber: #dcdcaa;
+  --accent-red: #f14c4c;
 
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --glass-bg: rgba(19, 25, 39, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --shadow-lg: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
 }
 
 * {
@@ -37,12 +75,14 @@
 }
 
 body {
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+  background-color: var(--vscode-bg-editor);
+  color: var(--vscode-text-primary);
   font-family: var(--font-sans);
   height: 100vh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+  font-size: 13px;
+  user-select: none;
 }
 
 #root {
@@ -51,36 +91,22 @@ body {
   flex-direction: column;
 }
 
-/* Custom Scrollbars */
+/* VSCodium Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-bright);
-  border-radius: 4px;
+  background: rgba(121, 121, 121, 0.4);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-cyan);
+  background: rgba(100, 100, 100, 0.7);
 }
-
-/* Glassmorphism Cards & Panels */
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-}
-
-/* Premium Glow Effects */
-.glow-cyan {
-  box-shadow: 0 0 20px -3px rgba(14, 165, 233, 0.3);
-}
-.glow-purple {
-  box-shadow: 0 0 20px -3px rgba(168, 85, 247, 0.3);
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Buttons */
@@ -88,66 +114,90 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 7px;
-  font-size: 0.825rem;
-  font-weight: 600;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   font-family: var(--font-sans);
+  line-height: 1.2;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%);
+  background-color: var(--vscode-accent);
   color: #ffffff;
-  border: none;
-  box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.35);
+  border: 1px solid var(--vscode-accent);
 }
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px 0 rgba(168, 85, 247, 0.45);
-  opacity: 0.95;
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--vscode-accent-hover);
+  border-color: var(--vscode-accent-hover);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
-  background-color: var(--bg-card);
-  color: var(--text-main);
-  border-color: var(--border-subtle);
+  background-color: #333333;
+  color: var(--vscode-text-primary);
+  border-color: #3c3c3c;
 }
-.btn-secondary:hover {
-  background-color: var(--bg-card-hover);
-  border-color: var(--border-bright);
-  color: #fff;
+.btn-secondary:hover:not(:disabled) {
+  background-color: #3e3e3e;
+  border-color: #4c4c4c;
+  color: #ffffff;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--vscode-text-secondary);
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--vscode-text-white);
 }
 
 .btn-danger {
-  background-color: rgba(244, 63, 94, 0.15);
-  color: var(--accent-rose);
-  border-color: rgba(244, 63, 94, 0.3);
+  background-color: rgba(241, 76, 76, 0.2);
+  color: var(--vscode-accent-red);
+  border-color: rgba(241, 76, 76, 0.4);
 }
 .btn-danger:hover {
-  background-color: rgba(244, 63, 94, 0.3);
-  border-color: var(--accent-rose);
+  background-color: rgba(241, 76, 76, 0.35);
+  border-color: var(--vscode-accent-red);
 }
 
 /* Inputs & Selects */
 .input {
-  background-color: var(--bg-dark);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-main);
-  padding: 0.45rem 0.8rem;
-  border-radius: 7px;
-  font-size: 0.85rem;
+  background-color: var(--vscode-bg-input);
+  border: 1px solid var(--vscode-border-light);
+  color: var(--vscode-text-primary);
+  padding: 0.35rem 0.6rem;
+  border-radius: 2px;
+  font-size: 12px;
   outline: none;
   font-family: var(--font-sans);
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 .input:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
+  border-color: var(--vscode-border-focus);
+}
+.input::placeholder {
+  color: var(--vscode-text-muted);
+}
+
+select.input {
+  cursor: pointer;
 }
 
 /* Badges */
@@ -155,54 +205,37 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  font-size: 0.725rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
-.badge-idle { background: rgba(100, 116, 139, 0.18); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
-.badge-thinking { background: rgba(245, 158, 11, 0.18); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); animation: pulseGlow 1.8s infinite; }
-.badge-executing { background: rgba(14, 165, 233, 0.18); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.35); animation: pulseGlow 1.4s infinite; }
-.badge-completed { background: rgba(16, 185, 129, 0.18); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); }
-.badge-error { background: rgba(244, 63, 94, 0.18); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.35); }
-.badge-paused { background: rgba(168, 85, 247, 0.18); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.35); }
+.badge-idle { background: rgba(110, 110, 110, 0.2); color: #969696; border: 1px solid #333; }
+.badge-thinking { background: rgba(204, 167, 0, 0.2); color: #dcdcaa; border: 1px solid rgba(204, 167, 0, 0.4); }
+.badge-executing { background: rgba(0, 122, 204, 0.2); color: #569cd6; border: 1px solid rgba(0, 122, 204, 0.4); }
+.badge-completed { background: rgba(78, 201, 176, 0.2); color: #4ec9b0; border: 1px solid rgba(78, 201, 176, 0.4); }
+.badge-error { background: rgba(241, 76, 76, 0.2); color: #f14c4c; border: 1px solid rgba(241, 76, 76, 0.4); }
+.badge-paused { background: rgba(197, 134, 192, 0.2); color: #c586c0; border: 1px solid rgba(197, 134, 192, 0.4); }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(0.98); }
-}
-
-/* Modal Overlay */
+/* Modals */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(7, 9, 14, 0.82);
-  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  animation: fadeIn 0.2s ease-out;
+  z-index: 999;
 }
 .modal-box {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-bright);
-  border-radius: 14px;
+  background-color: var(--vscode-bg-sidebar);
+  border: 1px solid var(--vscode-border-light);
+  border-radius: 4px;
   width: 90%;
-  max-width: 620px;
-  padding: 1.75rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
-  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  max-width: 580px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }

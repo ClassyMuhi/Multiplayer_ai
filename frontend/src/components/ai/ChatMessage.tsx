@@ -108,7 +108,7 @@ export const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, onOpenFil
                     onClick={() => hasOutput && toggleTool(toolKey)}
                   >
                     <div className="tool-item-meta">
-                      {renderToolIcon(tool.name)}
+                      {renderToolIcon(tool.name || '')}
                       <span className="tool-name">{tool.name}</span>
                       {tool.input && (
                         <span

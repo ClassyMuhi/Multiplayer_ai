@@ -338,7 +338,7 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({
                     <div className="memory-card-footer">
                       <span className="memory-date">
                         <Clock size={10} />
-                        {formatEventTime(mem.created_at)}
+                        {formatEventTime(mem.created_at || '')}
                       </span>
                     </div>
                   </div>

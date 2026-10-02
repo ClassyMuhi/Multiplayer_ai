@@ -13,6 +13,7 @@ import type {
 } from './types';
 
 import * as api from './api/client';
+import { LoginPage } from './components/auth/LoginPage';
 import { ProjectHeader } from './components/ProjectHeader';
 import { FileExplorer } from './components/FileExplorer';
 import { CodeEditor } from './components/CodeEditor';
@@ -22,6 +23,24 @@ import { GitPanel } from './components/GitPanel';
 import { ConflictModal } from './components/ConflictModal';
 
 export const App: React.FC = () => {
+  // Authentication & Session State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return !!localStorage.getItem('summit_auth_session');
+  });
+
+  const [currentUser, setCurrentUser] = useState<{ userId: string; displayName: string; role?: string }>(() => {
+    try {
+      const saved = localStorage.getItem('summit_auth_session');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {}
+    return {
+      userId: 'user_a',
+      displayName: 'Alice (Dev A)',
+      role: 'Lead Fullstack Engineer'
+    };
+  });
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
@@ -29,12 +48,7 @@ export const App: React.FC = () => {
   const [activeFile, setActiveFile] = useState<FileContent | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [currentUser, setCurrentUser] = useState({
-    userId: 'user_a',
-    displayName: 'Alice (Dev A)'
-  });
   const [connectedUsers, setConnectedUsers] = useState<UserPresence[]>([]);
-
   const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [memories, setMemories] = useState<ProjectMemory[]>([]);
   const [agentStatus, setAgentStatus] = useState<AgentStatusType>('IDLE');
@@ -59,7 +73,19 @@ export const App: React.FC = () => {
       const list = await api.fetchProjects();
       setProjects(list);
       if (list.length > 0 && !currentProject) {
-        selectProject(list[0]);
+        // Check if there was a saved project in session
+        const savedSession = localStorage.getItem('summit_auth_session');
+        let initialProj = list[0];
+        if (savedSession) {
+          try {
+            const parsed = JSON.parse(savedSession);
+            if (parsed.selectedProjectId) {
+              const matched = list.find((p) => p.id === parsed.selectedProjectId);
+              if (matched) initialProj = matched;
+            }
+          } catch (e) {}
+        }
+        selectProject(initialProj);
       }
     } catch (e) {
       console.error('Error loading projects:', e);
@@ -86,7 +112,7 @@ export const App: React.FC = () => {
       setConnectedUsers(users);
       setGitStatus(git);
 
-      // Select calculator.py or main file if exists
+      // Select first code file if available
       if (fileTree.length > 0) {
         const defaultFile = fileTree.find((f) => !f.is_directory);
         if (defaultFile) {
@@ -100,7 +126,7 @@ export const App: React.FC = () => {
 
   // WebSocket Connection Lifecycle
   useEffect(() => {
-    if (!currentProject) return;
+    if (!currentProject || !isAuthenticated) return;
 
     if (wsRef.current) {
       wsRef.current.close();
@@ -130,7 +156,7 @@ export const App: React.FC = () => {
     return () => {
       ws.close();
     };
-  }, [currentProject?.id, currentUser.userId]);
+  }, [currentProject?.id, currentUser.userId, isAuthenticated]);
 
   const handleAppEvent = (evt: AppEvent) => {
     setEvents((prev) => [...prev, evt]);
@@ -276,11 +302,11 @@ export const App: React.FC = () => {
       const newProj = await api.createProject(name, template);
       await loadProjects();
       selectProject(newProj);
+      return newProj;
     } catch (e) {
       alert('Failed to create project');
     }
   };
-
 
   const handleCreateMemory = async (key: string, value: string, category: string) => {
     if (!currentProject) return;
@@ -325,9 +351,34 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleLogin = (user: { userId: string; displayName: string; role: string }, selectedProjId?: string) => {
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+    if (selectedProjId) {
+      const found = projects.find((p) => p.id === selectedProjId);
+      if (found) selectProject(found);
+    }
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem('summit_auth_session');
+    setIsAuthenticated(false);
+  };
+
+  // If user is not authenticated, render Login Page
+  if (!isAuthenticated) {
+    return (
+      <LoginPage
+        projects={projects}
+        onLogin={handleLogin}
+        onCreateProject={handleCreateProject}
+      />
+    );
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--bg-dark)' }}>
-      {/* Top Header */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--vscode-bg-editor)' }}>
+      {/* VSCodium Titlebar Header */}
       <ProjectHeader
         projects={projects}
         currentProject={currentProject}
@@ -338,7 +389,8 @@ export const App: React.FC = () => {
         onCreateProject={handleCreateProject}
         connectedUsers={connectedUsers}
         currentUser={currentUser}
-        onSwitchUser={(userId, displayName) => setCurrentUser({ userId, displayName })}
+        onSwitchUser={(userId, displayName) => setCurrentUser((prev) => ({ ...prev, userId, displayName }))}
+        onSignOut={handleSignOut}
         showExplorer={showExplorer}
         onToggleExplorer={() => setShowExplorer(!showExplorer)}
         showAgentPanel={showAgentPanel}
@@ -359,9 +411,9 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Center: Editor + Memory Drawer + Git Panel */}
+        {/* Center: Editor + Memory Drawer + Git Status */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-          {/* Memory Notes Drawer */}
+          {/* Memory Notes Collapsible Drawer */}
           <MemoryPanel
             memories={memories}
             onCreateMemory={handleCreateMemory}
@@ -377,16 +429,17 @@ export const App: React.FC = () => {
             hasIndexHtml={files.some((f) => f.name === 'index.html' || f.path.endsWith('index.html'))}
           />
 
-          {/* Bottom Git Status Bar */}
+          {/* Bottom Status Bar */}
           <GitPanel
+            projectId={currentProject?.id || ''}
             status={gitStatus}
             onFetchDiff={handleFetchGitDiff}
             diffContent={gitDiff}
-            onCreateCheckpoint={handleCreateCheckpoint}
+            onRefreshStatus={() => currentProject && api.fetchGitStatus(currentProject.id).then(setGitStatus)}
           />
         </div>
 
-        {/* Right: Multiplayer AI Chat & Event Stream Panel */}
+        {/* Right: AI Assistant & Events Panel */}
         {showAgentPanel && (
           <AgentPanel
             status={agentStatus}
@@ -404,7 +457,6 @@ export const App: React.FC = () => {
       <ConflictModal
         conflict={conflictData}
         onAcceptServer={(_path, serverContent, serverVersion) => {
-
           setActiveFile((prev) => (prev ? { ...prev, content: serverContent, version: serverVersion } : null));
           setConflictData(null);
         }}
@@ -422,4 +474,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-

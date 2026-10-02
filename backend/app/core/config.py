@@ -1,6 +1,28 @@
+import os
 from pathlib import Path
 from typing import Optional
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Locate .env in backend directory, project root, or CWD
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # backend/
+PROJECT_ROOT = BASE_DIR.parent  # Multiplayer_ai/ or workspace root
+
+def _load_env_files():
+    # Only load .env files first; only fallback to .env.example if no valid key is loaded
+    for env_path in [BASE_DIR / ".env", PROJECT_ROOT / ".env", Path.cwd() / ".env", Path.cwd() / "backend" / ".env"]:
+        if env_path.exists():
+            load_dotenv(dotenv_path=env_path, override=True)
+
+
+_load_env_files()
+
+
+def _clean_str(val: Optional[str]) -> Optional[str]:
+    if not val or not isinstance(val, str):
+        return None
+    val_clean = val.strip()
+    return val_clean if val_clean else None
 
 
 class Settings(BaseSettings):
@@ -36,20 +58,44 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    def reload(self):
+        """Reload environment variables from .env files dynamically."""
+        _load_env_files()
+        self.AI_MODEL = _clean_str(os.getenv("AI_MODEL")) or self.AI_MODEL
+        self.AI_API_KEY = _clean_str(os.getenv("AI_API_KEY")) or self.AI_API_KEY
+        self.SUMMIT_MODEL = _clean_str(os.getenv("SUMMIT_MODEL")) or self.SUMMIT_MODEL
+        self.GROQ_API_KEY = _clean_str(os.getenv("GROQ_API_KEY")) or self.GROQ_API_KEY
+        self.GEMINI_API_KEY = _clean_str(os.getenv("GEMINI_API_KEY")) or self.GEMINI_API_KEY
+        self.OPENAI_API_KEY = _clean_str(os.getenv("OPENAI_API_KEY")) or self.OPENAI_API_KEY
+        self.ANTHROPIC_API_KEY = _clean_str(os.getenv("ANTHROPIC_API_KEY")) or self.ANTHROPIC_API_KEY
+        self.OPENHANDS_API_KEY = _clean_str(os.getenv("OPENHANDS_API_KEY")) or self.OPENHANDS_API_KEY
+
     @property
     def api_key(self) -> Optional[str]:
         return (
-            self.AI_API_KEY
-            or self.GROQ_API_KEY
-            or self.GEMINI_API_KEY
-            or self.OPENAI_API_KEY
-            or self.ANTHROPIC_API_KEY
-            or self.OPENHANDS_API_KEY
+            _clean_str(os.getenv("AI_API_KEY"))
+            or _clean_str(self.AI_API_KEY)
+            or _clean_str(os.getenv("GROQ_API_KEY"))
+            or _clean_str(self.GROQ_API_KEY)
+            or _clean_str(os.getenv("GEMINI_API_KEY"))
+            or _clean_str(self.GEMINI_API_KEY)
+            or _clean_str(os.getenv("OPENAI_API_KEY"))
+            or _clean_str(self.OPENAI_API_KEY)
+            or _clean_str(os.getenv("ANTHROPIC_API_KEY"))
+            or _clean_str(self.ANTHROPIC_API_KEY)
+            or _clean_str(os.getenv("OPENHANDS_API_KEY"))
+            or _clean_str(self.OPENHANDS_API_KEY)
         )
 
     @property
     def model_name(self) -> str:
-        return self.AI_MODEL or self.SUMMIT_MODEL or "gpt-4o"
+        return (
+            _clean_str(os.getenv("AI_MODEL"))
+            or _clean_str(self.AI_MODEL)
+            or _clean_str(os.getenv("SUMMIT_MODEL"))
+            or _clean_str(self.SUMMIT_MODEL)
+            or "gpt-4o"
+        )
 
     @property
     def workspace_root_path(self) -> Path:
@@ -68,3 +114,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

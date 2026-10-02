@@ -147,7 +147,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
                   <div className="project-meta">
                     <span className="meta-item">
                       <Clock size={12} />
-                      {new Date(project.created_at).toLocaleDateString()}
+                      {project.created_at ? new Date(project.created_at).toLocaleDateString() : 'Active'}
                     </span>
                   </div>
                   <button className="btn-open-project">

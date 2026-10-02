@@ -86,6 +86,63 @@ class GitService:
 
         return full_diff or "No changes detected."
 
+    def get_remote(self, workspace_path: Path) -> dict:
+        self.ensure_git_repo(workspace_path)
+        code, out = self._run_git(workspace_path, ["remote", "get-url", "origin"])
+        status = self.get_status(workspace_path)
+        if code == 0 and out:
+            return {"remote_url": out, "has_remote": True, "branch": status.get("branch", "main")}
+        return {"remote_url": None, "has_remote": False, "branch": status.get("branch", "main")}
+
+    def set_remote(self, workspace_path: Path, remote_url: str, branch: str = "main") -> dict:
+        self.ensure_git_repo(workspace_path)
+        clean_url = remote_url.strip()
+        code, _ = self._run_git(workspace_path, ["remote", "get-url", "origin"])
+        if code == 0:
+            self._run_git(workspace_path, ["remote", "set-url", "origin", clean_url])
+        else:
+            self._run_git(workspace_path, ["remote", "add", "origin", clean_url])
+        
+        self._run_git(workspace_path, ["branch", "-M", branch])
+        return {"remote_url": clean_url, "has_remote": True, "branch": branch}
+
+    def commit_and_push(self, project_id: str, workspace_path: Path, message: str, push: bool = True) -> dict:
+        self.ensure_git_repo(workspace_path)
+        self._run_git(workspace_path, ["add", "-A"])
+        code, out = self._run_git(workspace_path, ["commit", "-m", message])
+
+        # Get current commit hash
+        _, commit_hash = self._run_git(workspace_path, ["rev-parse", "--short", "HEAD"])
+        if not commit_hash:
+            commit_hash = "head"
+
+        record = repository.save_git_checkpoint(project_id, commit_hash, message)
+
+        pushed = False
+        push_output = ""
+        
+        if push:
+            remote_info = self.get_remote(workspace_path)
+            if remote_info.get("has_remote"):
+                status_info = self.get_status(workspace_path)
+                branch = status_info.get("branch", "main")
+                push_code, push_out = self._run_git(workspace_path, ["push", "-u", "origin", branch])
+                pushed = (push_code == 0)
+                push_output = push_out or ("Pushed successfully to origin/" + branch if pushed else "Failed to push")
+            else:
+                push_output = "No GitHub remote configured. Commit created locally."
+        else:
+            push_output = "Committed locally."
+
+        return {
+            "commit_hash": commit_hash,
+            "message": message,
+            "created_at": record["created_at"],
+            "pushed": pushed,
+            "push_output": push_output,
+            "success": True
+        }
+
     def create_checkpoint(self, project_id: str, workspace_path: Path, message: str) -> dict:
         self.ensure_git_repo(workspace_path)
         self._run_git(workspace_path, ["add", "-A"])

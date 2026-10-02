@@ -56,13 +56,13 @@ export const TopBar: React.FC<TopBarProps> = ({
           </span>
         );
       case 'completed':
-        return <span className="badge success">✓ Agent Ready</span>;
+        return <span className="badge success">Ready</span>;
       case 'stopped':
-        return <span className="badge">■ Stopped</span>;
+        return <span className="badge">Stopped</span>;
       case 'error':
-        return <span className="badge danger">⚠ Error</span>;
+        return <span className="badge danger">Error</span>;
       default:
-        return <span className="badge success">● Agent Ready</span>;
+        return <span className="badge success">Ready</span>;
     }
   };
 

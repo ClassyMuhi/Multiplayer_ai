@@ -186,6 +186,31 @@ class GitCheckpointResponse(BaseModel):
     created_at: datetime
 
 
+class GitRemoteResponse(BaseModel):
+    remote_url: Optional[str] = None
+    has_remote: bool
+    branch: Optional[str] = "main"
+
+
+class GitSetRemoteRequest(BaseModel):
+    remote_url: str = Field(..., min_length=5, description="GitHub repository URL (e.g. https://github.com/user/repo.git)")
+    branch: Optional[str] = Field("main", description="Target branch name")
+
+
+class GitCommitPushRequest(BaseModel):
+    message: str = Field(..., min_length=1, description="Commit message / description")
+    push: bool = Field(True, description="Whether to automatically push to remote GitHub repository")
+
+
+class GitCommitPushResponse(BaseModel):
+    commit_hash: str
+    message: str
+    created_at: datetime
+    pushed: bool
+    push_output: str
+    success: bool
+
+
 # --- Event Stream Schema ---
 class AppEvent(BaseModel):
     id: str

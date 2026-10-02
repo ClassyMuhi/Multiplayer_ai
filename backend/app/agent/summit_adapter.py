@@ -107,16 +107,22 @@ class SummitAdapter:
         model_override: Optional[str] = None
     ):
         import litellm
+        settings.reload()
 
         # Set environment variables for all configured provider keys
-        if settings.GROQ_API_KEY:
-            os.environ["GROQ_API_KEY"] = settings.GROQ_API_KEY
-        if settings.GEMINI_API_KEY:
-            os.environ["GEMINI_API_KEY"] = settings.GEMINI_API_KEY
-        if settings.OPENAI_API_KEY:
-            os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
-        if settings.ANTHROPIC_API_KEY:
-            os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
+        groq_key = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
+        gemini_key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
+        openai_key = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
+        anthropic_key = settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY")
+
+        if groq_key:
+            os.environ["GROQ_API_KEY"] = groq_key
+        if gemini_key:
+            os.environ["GEMINI_API_KEY"] = gemini_key
+        if openai_key:
+            os.environ["OPENAI_API_KEY"] = openai_key
+        if anthropic_key:
+            os.environ["ANTHROPIC_API_KEY"] = anthropic_key
 
         model = model_override or settings.model_name
 
@@ -124,31 +130,35 @@ class SummitAdapter:
             await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
             return
 
-        # Fallback to configured keys if model is not set
-        if not model or (model == "gpt-4o" and not settings.OPENAI_API_KEY):
-            if settings.GROQ_API_KEY:
+        # Intelligent fallback to the provider for which an API key is present
+        if not model or (model in ("gpt-4o", "gpt-4o-mini") and not openai_key):
+            if groq_key:
                 model = "groq/openai/gpt-oss-120b"
-            elif settings.GEMINI_API_KEY:
+            elif gemini_key:
                 model = "gemini/gemini-2.0-flash"
+            elif anthropic_key:
+                model = "claude-3-5-sonnet-20241022"
+            elif openai_key:
+                model = "gpt-4o"
 
-        # Map unavailable/deprecated Groq models to the available GPT-OSS 120B model on this Groq account
-        if settings.GROQ_API_KEY and ("llama" in model.lower() or model in ("groq/llama-3.3-70b-versatile", "groq/llama-3.1-8b-instant", "groq/llama3-70b-8192")):
+        # Format model prefix correctly for LiteLLM
+        if groq_key and ("llama" in model.lower() or "gpt-oss" in model.lower() or "oss-120b" in model.lower()):
             model = "groq/openai/gpt-oss-120b"
-
-        # Handle gpt-oss models hosted on Groq
-        if ("gpt-oss" in model or "oss-120b" in model or "oss-20b" in model or "qwen3.8" in model) and settings.GROQ_API_KEY:
+        elif ("qwen" in model.lower() or "gemma" in model.lower() or "mixtral" in model.lower()) and groq_key:
             if not model.startswith("groq/"):
                 model = f"groq/{model}"
+        elif model.startswith("gemini-") or ("gemini" in model.lower() and not model.startswith("gemini/")):
+            model = f"gemini/{model}"
 
         # Explicit key selection based on model family
         if model.startswith("groq/"):
-            api_key = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
+            api_key = groq_key
         elif model.startswith("gemini/"):
-            api_key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
+            api_key = gemini_key
         elif model.startswith("openai/") or model.startswith("gpt-"):
-            api_key = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
+            api_key = openai_key
         elif model.startswith("anthropic/") or model.startswith("claude"):
-            api_key = settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY")
+            api_key = anthropic_key
         else:
             api_key = settings.api_key
 
@@ -656,6 +666,7 @@ def health():
         await self._broadcast(project_id, EventNormalizer.agent_message(project_id=project_id, message=summary))
 
     def _has_valid_api_key(self) -> bool:
+        settings.reload()
         k = settings.api_key
         if not k or not isinstance(k, str):
             return False

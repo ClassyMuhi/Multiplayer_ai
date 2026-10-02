@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import type { FileNode } from '../types';
-import { FolderOpen, FileCode, FileText, Plus, Trash2, RefreshCw } from 'lucide-react';
-
+import {
+  FolderOpen,
+  FileCode,
+  FileText,
+  FileJson,
+  FileCheck,
+  Plus,
+  Trash2,
+  RefreshCw,
+  ChevronDown,
+  ChevronRight
+} from 'lucide-react';
 
 interface FileExplorerProps {
   files: FileNode[];
@@ -22,6 +32,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 }) => {
   const [newFilePath, setNewFilePath] = useState('');
   const [showAddInput, setShowAddInput] = useState(false);
+  const [isSectionOpen, setIsSectionOpen] = useState(true);
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,10 +43,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  const getFileIcon = (name: string) => {
+    if (name.endsWith('.py')) return <FileCode size={14} color="#3776ab" />;
+    if (name.endsWith('.ts') || name.endsWith('.tsx')) return <FileCode size={14} color="#3178c6" />;
+    if (name.endsWith('.js') || name.endsWith('.jsx')) return <FileCode size={14} color="#f7df1e" />;
+    if (name.endsWith('.html')) return <FileCode size={14} color="#e34f26" />;
+    if (name.endsWith('.css')) return <FileCode size={14} color="#42a5f5" />;
+    if (name.endsWith('.json')) return <FileJson size={14} color="#cbcb41" />;
+    if (name.endsWith('.md')) return <FileText size={14} color="#519aba" />;
+    if (name.endsWith('.ini') || name.endsWith('.env')) return <FileCheck size={14} color="#969696" />;
+    return <FileText size={14} color="var(--vscode-text-muted)" />;
+  };
+
   const renderTree = (nodes: FileNode[], depth = 0) => {
     return nodes.map((node) => {
       const isSelected = activePath === node.path;
-      const isCode = node.name.endsWith('.py') || node.name.endsWith('.ts') || node.name.endsWith('.js') || node.name.endsWith('.json');
 
       if (node.is_directory) {
         return (
@@ -44,16 +66,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.3rem 0.5rem',
+                gap: '0.35rem',
+                padding: '0.25rem 0.5rem',
                 paddingLeft: `${depth * 0.75 + 0.5}rem`,
-                color: 'var(--text-muted)',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                userSelect: 'none'
+                color: 'var(--vscode-text-secondary)',
+                fontSize: '12px',
+                fontWeight: 500,
+                userSelect: 'none',
+                cursor: 'pointer'
               }}
             >
-              <FolderOpen size={14} color="var(--accent-amber)" />
+              <FolderOpen size={13} color="var(--vscode-accent-yellow)" />
               <span>{node.name}</span>
             </div>
             {node.children && renderTree(node.children, depth + 1)}
@@ -68,40 +91,47 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0.35rem 0.5rem',
-            paddingLeft: `${depth * 0.75 + 0.5}rem`,
-            backgroundColor: isSelected ? 'var(--bg-hover)' : 'transparent',
-            borderLeft: isSelected ? '2px solid var(--accent-blue)' : '2px solid transparent',
-            color: isSelected ? 'var(--accent-blue)' : 'var(--text-main)',
-            fontSize: '0.825rem',
+            padding: '0.28rem 0.5rem',
+            paddingLeft: `${depth * 0.75 + 0.6}rem`,
+            backgroundColor: isSelected ? '#094771' : 'transparent',
+            borderLeft: isSelected ? '2px solid #007acc' : '2px solid transparent',
+            color: isSelected ? '#ffffff' : 'var(--vscode-text-primary)',
+            fontSize: '12px',
             cursor: 'pointer',
-            borderRadius: '4px',
-            margin: '1px 0'
+            transition: 'background-color 0.1s ease'
+          }}
+          onMouseEnter={(e) => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--vscode-bg-card-hover)';
+          }}
+          onMouseLeave={(e) => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
           }}
           onClick={() => onSelectFile(node.path)}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
-            {isCode ? <FileCode size={14} color="var(--accent-blue)" /> : <FileText size={14} color="var(--text-muted)" />}
+            {getFileIcon(node.name)}
             <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
               {node.name}
             </span>
           </div>
-
 
           <button
             title="Delete File"
             style={{
               background: 'none',
               border: 'none',
-              color: 'var(--text-dim)',
+              color: 'var(--vscode-text-muted)',
               cursor: 'pointer',
               padding: '2px',
-              display: 'flex'
+              display: 'flex',
+              opacity: isSelected ? 1 : 0.6
             }}
             onClick={(e) => {
               e.stopPropagation();
               if (confirm(`Delete ${node.path}?`)) onDeleteFile(node.path);
             }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--vscode-accent-red)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--vscode-text-muted)'}
           >
             <Trash2 size={12} />
           </button>
@@ -113,53 +143,70 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   return (
     <div style={{
       width: '240px',
-      minWidth: '240px',
+      minWidth: '220px',
       flexShrink: 0,
-      backgroundColor: 'var(--bg-panel)',
-      borderRight: '1px solid var(--border-color)',
+      backgroundColor: 'var(--vscode-bg-sidebar)',
+      borderRight: '1px solid var(--vscode-border)',
       display: 'flex',
       flexDirection: 'column',
-      height: '100%'
+      height: '100%',
+      userSelect: 'none'
     }}>
-      {/* Explorer Header */}
+      {/* Explorer Sidebar Header */}
       <div style={{
-        padding: '0.6rem 0.8rem',
-        borderBottom: '1px solid var(--border-color)',
+        padding: '0.5rem 0.75rem',
+        borderBottom: '1px solid var(--vscode-border)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        height: '35px'
       }}>
-        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Explorer
-        </span>
+        <div
+          onClick={() => setIsSectionOpen(!isSectionOpen)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            cursor: 'pointer',
+            fontSize: '11px',
+            fontWeight: 700,
+            color: 'var(--vscode-text-secondary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em'
+          }}
+        >
+          {isSectionOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          <span>Explorer</span>
+        </div>
+
         <div style={{ display: 'flex', gap: '0.2rem' }}>
           <button
-            className="btn btn-secondary"
-            style={{ padding: '0.2rem 0.4rem' }}
+            className="btn-icon"
+            style={{ padding: '2px 4px' }}
             title="New File"
             onClick={() => setShowAddInput(!showAddInput)}
           >
             <Plus size={13} />
           </button>
           <button
-            className="btn btn-secondary"
-            style={{ padding: '0.2rem 0.4rem' }}
-            title="Refresh Explorer"
+            className="btn-icon"
+            style={{ padding: '2px 4px' }}
+            title="Refresh Files"
             onClick={onRefresh}
           >
-            <RefreshCw size={13} />
+            <RefreshCw size={12} />
           </button>
         </div>
       </div>
 
       {/* Add New File Input */}
       {showAddInput && (
-        <form onSubmit={handleAddSubmit} style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
+        <form onSubmit={handleAddSubmit} style={{ padding: '0.4rem 0.5rem', borderBottom: '1px solid var(--vscode-border)', backgroundColor: '#1e1e1e' }}>
           <input
             type="text"
             className="input"
-            style={{ width: '100%', fontSize: '0.75rem' }}
-            placeholder="filename.py or src/app.py"
+            style={{ width: '100%', fontSize: '11px', padding: '0.25rem 0.4rem' }}
+            placeholder="filename.py, app.js, index.html"
             value={newFilePath}
             onChange={(e) => setNewFilePath(e.target.value)}
             autoFocus
@@ -168,15 +215,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       )}
 
       {/* Tree Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0.4rem 0.25rem' }}>
-        {files.length === 0 ? (
-          <div style={{ padding: '1rem', fontSize: '0.8rem', color: 'var(--text-dim)', textAlign: 'center' }}>
-            No files in workspace.
-          </div>
-        ) : (
-          renderTree(files)
-        )}
-      </div>
+      {isSectionOpen && (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0.2rem 0' }}>
+          {files.length === 0 ? (
+            <div style={{ padding: '1rem', fontSize: '11px', color: 'var(--vscode-text-muted)', textAlign: 'center' }}>
+              No files in workspace.
+            </div>
+          ) : (
+            renderTree(files)
+          )}
+        </div>
+      )}
     </div>
   );
 };
