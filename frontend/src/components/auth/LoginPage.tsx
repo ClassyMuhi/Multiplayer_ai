@@ -10,12 +10,15 @@ import {
   Terminal,
   Check,
   Cpu,
-  Layers
+  Layers,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
+import { signInWithGoogle } from '../../services/firebase';
 
 interface LoginPageProps {
   projects: Project[];
-  onLogin: (user: { userId: string; displayName: string; role: string }, selectedProjectId?: string) => void;
+  onLogin: (user: { userId: string; displayName: string; role: string; email?: string | null; photoURL?: string | null }, selectedProjectId?: string) => void;
   onCreateProject: (name: string, template?: string) => Promise<Project | void>;
 }
 
@@ -55,6 +58,38 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectTemplate, setNewProjectTemplate] = useState('blank');
   const [rememberMe, setRememberMe] = useState(true);
+
+  // Firebase Google Auth state
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const handleGoogleSignIn = async () => {
+    setAuthError(null);
+    setIsGoogleLoading(true);
+    try {
+      const googleUser = await signInWithGoogle();
+      const userObj = {
+        userId: googleUser.uid,
+        displayName: googleUser.displayName || googleUser.email?.split('@')[0] || 'Google Developer',
+        role: 'Fullstack Engineer',
+        email: googleUser.email,
+        photoURL: googleUser.photoURL
+      };
+
+      if (rememberMe) {
+        localStorage.setItem('summit_auth_session', JSON.stringify({ ...userObj, selectedProjectId }));
+      } else {
+        localStorage.removeItem('summit_auth_session');
+      }
+
+      onLogin(userObj, selectedProjectId);
+    } catch (err: any) {
+      console.error('Firebase Google Sign-In error:', err);
+      setAuthError(err.message || 'Authentication failed. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleCreateNewProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +216,103 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             <p style={{ fontSize: '12px', color: 'var(--vscode-text-secondary)', lineHeight: '1.4' }}>
               Collaborative coding environment with real-time AI agents and persistent memory.
             </p>
+          </div>
+
+          {/* Auth Error Banner */}
+          {authError && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.6rem',
+              padding: '0.65rem 0.8rem',
+              backgroundColor: 'rgba(241, 76, 76, 0.12)',
+              border: '1px solid rgba(241, 76, 76, 0.35)',
+              borderRadius: '4px',
+              color: '#f14c4c',
+              fontSize: '11px',
+              lineHeight: '1.4',
+              marginBottom: '1rem'
+            }}>
+              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+              <div style={{ flex: 1 }}>{authError}</div>
+            </div>
+          )}
+
+          {/* Primary: Real Google Sign-In Button */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+              style={{
+                width: '100%',
+                padding: '0.65rem 1rem',
+                backgroundColor: '#ffffff',
+                color: '#1f1f1f',
+                border: '1px solid #d1d5db',
+                borderRadius: '4px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: isGoogleLoading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.65rem',
+                transition: 'all 0.15s ease',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+                opacity: isGoogleLoading ? 0.7 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (!isGoogleLoading) e.currentTarget.style.backgroundColor = '#f3f4f6';
+              }}
+              onMouseLeave={(e) => {
+                if (!isGoogleLoading) e.currentTarget.style.backgroundColor = '#ffffff';
+              }}
+            >
+              {isGoogleLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Connecting with Google...</span>
+                </>
+              ) : (
+                <>
+                  {/* Google SVG Multi-Color Logo */}
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.36 24 12 24z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                    />
+                  </svg>
+                  <span>Continue with Google</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            marginBottom: '1.25rem'
+          }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--vscode-border)' }} />
+            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--vscode-text-muted)', fontWeight: 600 }}>
+              Or use workspace profile
+            </span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--vscode-border)' }} />
           </div>
 
           {/* Account Mode Tabs */}

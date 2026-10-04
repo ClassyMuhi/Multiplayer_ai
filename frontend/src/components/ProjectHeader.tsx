@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Project, UserPresence } from '../types';
 import {
   Code2,
@@ -8,8 +8,20 @@ import {
   PanelLeft,
   PanelRight,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  UserPlus,
+  Mail,
+  Copy,
+  Check,
+  Trash2,
+  ShieldCheck
 } from 'lucide-react';
+
+interface InvitedTeammate {
+  email: string;
+  role: string;
+  invitedAt: string;
+}
 
 interface ProjectHeaderProps {
   projects: Project[];
@@ -17,7 +29,7 @@ interface ProjectHeaderProps {
   onSelectProject: (id: string) => void;
   onCreateProject: (name: string, template?: string) => void;
   connectedUsers: UserPresence[];
-  currentUser: { userId: string; displayName: string; role?: string };
+  currentUser: { userId: string; displayName: string; role?: string; email?: string | null; photoURL?: string | null };
   onSwitchUser: (userId: string, displayName: string) => void;
   onSignOut?: () => void;
   showExplorer?: boolean;
@@ -43,6 +55,71 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const [newProjectName, setNewProjectName] = useState('');
   const [template, setTemplate] = useState('blank');
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Teammate Invitation Modal State
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('Fullstack Engineer');
+  const [invitedMembers, setInvitedMembers] = useState<InvitedTeammate[]>([]);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [inviteSuccessMsg, setInviteSuccessMsg] = useState<string | null>(null);
+
+  // Load teammates from localStorage for the active workspace
+  useEffect(() => {
+    if (!currentProject) return;
+    try {
+      const stored = localStorage.getItem(`summit_teammates_${currentProject.id}`);
+      if (stored) {
+        setInvitedMembers(JSON.parse(stored));
+      } else {
+        setInvitedMembers([]);
+      }
+    } catch (e) {
+      setInvitedMembers([]);
+    }
+  }, [currentProject?.id]);
+
+  const handleInviteTeammate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim() || !currentProject) return;
+
+    const email = inviteEmail.trim().toLowerCase();
+    
+    // Avoid duplicate email
+    if (invitedMembers.some((m) => m.email === email)) {
+      setInviteSuccessMsg(`Teammate with email ${email} is already added.`);
+      setTimeout(() => setInviteSuccessMsg(null), 3000);
+      return;
+    }
+
+    const newMember: InvitedTeammate = {
+      email,
+      role: inviteRole,
+      invitedAt: new Date().toLocaleDateString()
+    };
+
+    const updated = [newMember, ...invitedMembers];
+    setInvitedMembers(updated);
+    localStorage.setItem(`summit_teammates_${currentProject.id}`, JSON.stringify(updated));
+    
+    setInviteEmail('');
+    setInviteSuccessMsg(`Teammate ${email} added successfully with ${inviteRole} access.`);
+    setTimeout(() => setInviteSuccessMsg(null), 3500);
+  };
+
+  const handleRemoveTeammate = (email: string) => {
+    if (!currentProject) return;
+    const updated = invitedMembers.filter((m) => m.email !== email);
+    setInvitedMembers(updated);
+    localStorage.setItem(`summit_teammates_${currentProject.id}`, JSON.stringify(updated));
+  };
+
+  const handleCopyInviteLink = () => {
+    const url = window.location.origin + (currentProject ? `?project=${currentProject.id}` : '');
+    navigator.clipboard.writeText(url);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,6 +264,27 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </div>
         </div>
 
+        {/* Add Teammate Button */}
+        <button
+          className="btn btn-secondary"
+          onClick={() => setShowInviteModal(true)}
+          title="Add Teammate by Email"
+          style={{
+            padding: '0.2rem 0.5rem',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            backgroundColor: 'rgba(0, 122, 204, 0.15)',
+            border: '1px solid rgba(0, 122, 204, 0.4)',
+            color: '#38a5ff',
+            fontWeight: 500
+          }}
+        >
+          <UserPlus size={12} />
+          <span>Add Teammate</span>
+        </button>
+
         {/* User Account / Profile Menu */}
         <div style={{ position: 'relative' }}>
           <button
@@ -205,19 +303,27 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               fontWeight: 500
             }}
           >
-            <div style={{
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--vscode-accent)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '9px',
-              fontWeight: 700
-            }}>
-              {currentUser.displayName.charAt(0).toUpperCase()}
-            </div>
+            {currentUser.photoURL ? (
+              <img
+                src={currentUser.photoURL}
+                alt="Avatar"
+                style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              <div style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--vscode-accent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '9px',
+                fontWeight: 700
+              }}>
+                {currentUser.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
             <span>{currentUser.displayName}</span>
             <ChevronDown size={11} color="var(--vscode-text-muted)" />
           </button>
@@ -230,7 +336,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                 top: '100%',
                 right: 0,
                 marginTop: '4px',
-                width: '190px',
+                width: '210px',
                 backgroundColor: 'var(--vscode-bg-sidebar)',
                 border: '1px solid var(--vscode-border-light)',
                 borderRadius: '4px',
@@ -244,6 +350,11 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                 <div style={{ fontWeight: 600, fontSize: '11px', color: 'var(--vscode-text-white)' }}>
                   {currentUser.displayName}
                 </div>
+                {currentUser.email && (
+                  <div style={{ fontSize: '10px', color: 'var(--vscode-accent-blue)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentUser.email}
+                  </div>
+                )}
                 <div style={{ fontSize: '10px', color: 'var(--vscode-text-muted)' }}>
                   {currentUser.role || 'Developer'}
                 </div>
@@ -270,7 +381,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <LogOut size={12} />
-                  <span>Switch Account / Sign Out</span>
+                  <span>Sign Out / Switch Account</span>
                 </button>
               )}
             </div>
@@ -292,6 +403,240 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </button>
         )}
       </div>
+
+      {/* Add / Invite Teammate Modal */}
+      {showInviteModal && (
+        <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
+          <div className="modal-box" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{
+                padding: '0.4rem',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(0, 122, 204, 0.2)',
+                color: 'var(--vscode-accent-blue)',
+                display: 'flex'
+              }}>
+                <UserPlus size={18} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--vscode-text-white)', margin: 0 }}>
+                  Add Teammate to Workspace
+                </h3>
+                <p style={{ fontSize: '11px', color: 'var(--vscode-text-muted)', margin: 0 }}>
+                  Workspace: <span style={{ color: 'var(--vscode-accent)' }}>{currentProject?.name || 'Current'}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Notification message */}
+            {inviteSuccessMsg && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.5rem 0.75rem',
+                backgroundColor: 'rgba(106, 153, 85, 0.15)',
+                border: '1px solid rgba(106, 153, 85, 0.4)',
+                borderRadius: '4px',
+                color: '#6a9955',
+                fontSize: '11px',
+                marginBottom: '0.85rem'
+              }}>
+                <Check size={13} />
+                <span>{inviteSuccessMsg}</span>
+              </div>
+            )}
+
+            {/* Add Teammate Form */}
+            <form onSubmit={handleInviteTeammate} style={{ marginBottom: '1.25rem' }}>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <label style={{ display: 'block', fontSize: '11px', color: 'var(--vscode-text-secondary)', marginBottom: '0.3rem', fontWeight: 500 }}>
+                  Teammate Email Address
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="email"
+                    required
+                    className="input"
+                    style={{ width: '100%', paddingLeft: '2rem' }}
+                    placeholder="e.g. colleague@company.com or gmail"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    autoFocus
+                  />
+                  <Mail
+                    size={13}
+                    color="var(--vscode-text-muted)"
+                    style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.5rem', alignItems: 'flex-end' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'var(--vscode-text-secondary)', marginBottom: '0.3rem', fontWeight: 500 }}>
+                    Role & Permissions
+                  </label>
+                  <select
+                    className="input"
+                    style={{ width: '100%' }}
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value)}
+                  >
+                    <option value="Fullstack Engineer">Fullstack Engineer (Full Read/Write)</option>
+                    <option value="Frontend Specialist">Frontend Specialist</option>
+                    <option value="Backend Architect">Backend Architect</option>
+                    <option value="Code Reviewer">Code Reviewer (Read Only)</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ height: '30px', padding: '0 0.85rem', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  <UserPlus size={13} />
+                  <span>Add Member</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Direct Workspace Sharing Link */}
+            <div style={{
+              padding: '0.65rem 0.8rem',
+              backgroundColor: 'var(--vscode-bg-editor)',
+              border: '1px solid var(--vscode-border)',
+              borderRadius: '4px',
+              marginBottom: '1rem'
+            }}>
+              <div style={{ fontSize: '11px', color: 'var(--vscode-text-muted)', marginBottom: '0.35rem', fontWeight: 500 }}>
+                Direct Workspace Link
+              </div>
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <input
+                  type="text"
+                  readOnly
+                  className="input"
+                  style={{ flex: 1, fontSize: '11px', color: 'var(--vscode-text-secondary)', backgroundColor: '#181818' }}
+                  value={window.location.origin + (currentProject ? `?project=${currentProject.id}` : '')}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleCopyInviteLink}
+                  style={{ fontSize: '11px', padding: '0 0.6rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                >
+                  {copySuccess ? <Check size={12} color="#6a9955" /> : <Copy size={12} />}
+                  <span>{copySuccess ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* List of Teammates & Collaborators */}
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--vscode-text-secondary)', fontWeight: 600, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <ShieldCheck size={13} color="var(--vscode-accent-cyan)" />
+                <span>Workspace Members ({invitedMembers.length + 1})</span>
+              </div>
+
+              <div style={{
+                maxHeight: '140px',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.4rem',
+                border: '1px solid var(--vscode-border)',
+                borderRadius: '4px',
+                padding: '0.4rem',
+                backgroundColor: '#181818'
+              }}>
+                {/* Active Current User */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.35rem 0.5rem',
+                  backgroundColor: 'rgba(0, 122, 204, 0.12)',
+                  borderRadius: '3px',
+                  border: '1px solid rgba(0, 122, 204, 0.3)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#6a9955' }} />
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: 600, color: '#fff' }}>
+                        {currentUser.displayName} <span style={{ fontSize: '10px', color: 'var(--vscode-accent-blue)' }}>(You / Owner)</span>
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--vscode-text-muted)' }}>
+                        {currentUser.email || 'Workspace Lead'}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '10px', color: 'var(--vscode-text-muted)', backgroundColor: 'var(--vscode-bg-sidebar)', padding: '2px 6px', borderRadius: '3px' }}>
+                    Owner
+                  </span>
+                </div>
+
+                {/* Invited Members */}
+                {invitedMembers.map((member) => (
+                  <div
+                    key={member.email}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.35rem 0.5rem',
+                      backgroundColor: 'var(--vscode-bg-sidebar)',
+                      borderRadius: '3px',
+                      border: '1px solid var(--vscode-border)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#cca700' }} />
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 500, color: '#fff' }}>
+                          {member.email}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--vscode-text-muted)' }}>
+                          {member.role} • Added {member.invitedAt}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTeammate(member.email)}
+                      title="Remove Teammate"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--vscode-text-muted)',
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        borderRadius: '3px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--vscode-accent-red)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--vscode-text-muted)'}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowInviteModal(false)}
+                style={{ fontSize: '11px', padding: '0.35rem 0.8rem' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Project Modal */}
       {showNewModal && (

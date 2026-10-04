@@ -21,6 +21,7 @@ import { AgentPanel } from './components/AgentPanel';
 import { MemoryPanel } from './components/MemoryPanel';
 import { GitPanel } from './components/GitPanel';
 import { ConflictModal } from './components/ConflictModal';
+import { signOutUser, subscribeToAuthState } from './services/firebase';
 
 export const App: React.FC = () => {
   // Authentication & Session State
@@ -28,7 +29,13 @@ export const App: React.FC = () => {
     return !!localStorage.getItem('summit_auth_session');
   });
 
-  const [currentUser, setCurrentUser] = useState<{ userId: string; displayName: string; role?: string }>(() => {
+  const [currentUser, setCurrentUser] = useState<{
+    userId: string;
+    displayName: string;
+    role?: string;
+    email?: string | null;
+    photoURL?: string | null;
+  }>(() => {
     try {
       const saved = localStorage.getItem('summit_auth_session');
       if (saved) {
@@ -63,9 +70,24 @@ export const App: React.FC = () => {
 
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Initial load projects
+  // Initial load projects & subscribe to Firebase Auth state
   useEffect(() => {
     loadProjects();
+
+    const unsubscribe = subscribeToAuthState((firebaseUser) => {
+      if (firebaseUser) {
+        setCurrentUser((prev) => ({
+          userId: firebaseUser.uid,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || prev.displayName || 'Google Developer',
+          role: prev.role || 'Fullstack Engineer',
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL
+        }));
+        setIsAuthenticated(true);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const loadProjects = async () => {
@@ -351,7 +373,10 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleLogin = (user: { userId: string; displayName: string; role: string }, selectedProjId?: string) => {
+  const handleLogin = (
+    user: { userId: string; displayName: string; role: string; email?: string | null; photoURL?: string | null },
+    selectedProjId?: string
+  ) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
     if (selectedProjId) {
@@ -360,7 +385,12 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+    } catch (e) {
+      console.warn('Firebase signOut error:', e);
+    }
     localStorage.removeItem('summit_auth_session');
     setIsAuthenticated(false);
   };
