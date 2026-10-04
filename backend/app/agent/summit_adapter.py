@@ -99,68 +99,11 @@ class SummitAdapter:
             )
             return -1, err_msg
 
-    async def _execute_real_llm_agent(
-        self,
-        project_id: str,
-        workspace_dir: Path,
-        user_prompt: str,
-        model_override: Optional[str] = None
-    ):
+    async def _execute_real_llm_agent(self, project_id: str, workspace_dir: Path, user_prompt: str):
         import litellm
-        settings.reload()
 
-        # Set environment variables for all configured provider keys
-        groq_key = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
-        gemini_key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
-        openai_key = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
-        anthropic_key = settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY")
-
-        if groq_key:
-            os.environ["GROQ_API_KEY"] = groq_key
-        if gemini_key:
-            os.environ["GEMINI_API_KEY"] = gemini_key
-        if openai_key:
-            os.environ["OPENAI_API_KEY"] = openai_key
-        if anthropic_key:
-            os.environ["ANTHROPIC_API_KEY"] = anthropic_key
-
-        model = model_override or settings.model_name
-
-        if model == "autonomous":
-            await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
-            return
-
-        # Intelligent fallback to the provider for which an API key is present
-        if not model or (model in ("gpt-4o", "gpt-4o-mini") and not openai_key):
-            if groq_key:
-                model = "groq/openai/gpt-oss-120b"
-            elif gemini_key:
-                model = "gemini/gemini-2.0-flash"
-            elif anthropic_key:
-                model = "claude-3-5-sonnet-20241022"
-            elif openai_key:
-                model = "gpt-4o"
-
-        # Format model prefix correctly for LiteLLM
-        if groq_key and ("llama" in model.lower() or "gpt-oss" in model.lower() or "oss-120b" in model.lower()):
-            model = "groq/openai/gpt-oss-120b"
-        elif ("qwen" in model.lower() or "gemma" in model.lower() or "mixtral" in model.lower()) and groq_key:
-            if not model.startswith("groq/"):
-                model = f"groq/{model}"
-        elif model.startswith("gemini-") or ("gemini" in model.lower() and not model.startswith("gemini/")):
-            model = f"gemini/{model}"
-
-        # Explicit key selection based on model family
-        if model.startswith("groq/"):
-            api_key = groq_key
-        elif model.startswith("gemini/"):
-            api_key = gemini_key
-        elif model.startswith("openai/") or model.startswith("gpt-"):
-            api_key = openai_key
-        elif model.startswith("anthropic/") or model.startswith("claude"):
-            api_key = anthropic_key
-        else:
-            api_key = settings.api_key
+        api_key = settings.api_key
+        model = settings.model_name
 
         tools = [
             {
@@ -666,7 +609,6 @@ def health():
         await self._broadcast(project_id, EventNormalizer.agent_message(project_id=project_id, message=summary))
 
     def _has_valid_api_key(self) -> bool:
-        settings.reload()
         k = settings.api_key
         if not k or not isinstance(k, str):
             return False
@@ -700,14 +642,7 @@ def health():
             return False
         return True
 
-    async def run_session(
-        self,
-        project_id: str,
-        user_prompt: str,
-        user_id: Optional[str] = None,
-        user_name: Optional[str] = None,
-        model_override: Optional[str] = None
-    ):
+    async def run_session(self, project_id: str, user_prompt: str, user_id: Optional[str] = None, user_name: Optional[str] = None):
         workspace_dir = self.workspace_mgr.get_workspace_dir(project_id)
         if not workspace_dir.exists():
             await self._broadcast(project_id, EventNormalizer.error(project_id=project_id, error_message=f"Workspace '{project_id}' not found."))
@@ -720,13 +655,10 @@ def health():
                 EventNormalizer.user_message(project_id=project_id, message=user_prompt, user_id=user_id, user_name=user_name)
             )
 
-            if model_override == "autonomous":
-                logger.info(f"Running built-in autonomous engine for project: {project_id}")
-                await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
-            elif self._has_valid_api_key():
-                logger.info(f"Running LLM Agent for project: {project_id} (model: {model_override or settings.model_name})")
+            if self._has_valid_api_key():
+                logger.info(f"Running LLM Agent for project: {project_id}")
                 try:
-                    await self._execute_real_llm_agent(project_id, workspace_dir, user_prompt, model_override)
+                    await self._execute_real_llm_agent(project_id, workspace_dir, user_prompt)
                 except Exception as llm_err:
                     logger.warning(f"LLM agent failed ({llm_err}), falling back to Summit Autonomous Engine.")
                     await self._broadcast(

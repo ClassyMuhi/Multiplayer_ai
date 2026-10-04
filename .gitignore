@@ -1,44 +1,8 @@
-# Environment & Secrets (Crucial)
 .env
-.env.*
-*.env
-backend/.env
-frontend/.env
-*.local
-
-# Python
+.env.local
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-ENV/
-*.egg-info/
-.installed.cfg
-*.egg
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Databases & Vector Stores
-*.db
-*.sqlite
-*.sqlite3
-data/
-backend/data/
-backend/workspaces/
-workspaces/
-
-# Frontend / Node
 node_modules/
-frontend/node_modules/
 dist/
-frontend/dist/
-.vite/
-*.tsbuildinfo
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+workspaces/
+.pytest_cache/

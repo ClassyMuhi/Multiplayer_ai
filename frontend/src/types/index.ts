@@ -16,17 +16,14 @@ export type AppEventType =
   | 'error'
   | 'session_complete'
   | 'memory_updated'
-  | 'memory_saved'
-  | 'presence_update'
   | 'git_checkpoint';
 
 export interface Project {
   id: string;
   name: string;
-  description?: string;
-  workspace_path?: string;
-  created_at?: string;
-  updated_at?: string;
+  workspace_path: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface FileNode {
@@ -37,76 +34,6 @@ export interface FileNode {
   children?: FileNode[];
 }
 
-export interface OpenFile {
-  path: string;
-  content: string;
-  originalContent?: string;
-  language?: string;
-  isDirty?: boolean;
-  version?: number;
-}
-
-export interface ToolExecution {
-  id?: string;
-  tool?: string;
-  name?: string;
-  args?: Record<string, any>;
-  arguments?: Record<string, any>;
-  input?: any;
-  result?: any;
-  output?: string;
-  status?: string;
-  timestamp?: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  sender?: 'user' | 'agent' | 'system';
-  role?: string;
-  text?: string;
-  content?: string;
-  thought?: string;
-  timestamp: string;
-  userName?: string;
-  user_name?: string;
-  toolExecutions?: ToolExecution[];
-}
-
-export interface AgentSessionStatus {
-  status: string;
-  currentStep?: string;
-  current_action?: string;
-  activeCommand?: string;
-}
-
-export interface CreateProjectPayload {
-  name: string;
-  description?: string;
-  template?: string;
-  root_path?: string;
-}
-
-export interface CreateMemoryPayload {
-  key?: string;
-  value?: string;
-  content?: string;
-  category?: string;
-  importance?: string | number;
-  memory_type?: string;
-}
-
-export interface ProjectListResponse {
-  projects: Project[];
-}
-
-export interface ProjectSummary {
-  id?: string;
-  project_id?: string;
-  content?: string;
-  summary?: string;
-  architecture_overview?: string;
-  updated_at?: string;
-}
 
 export interface FileContent {
   path: string;
@@ -138,10 +65,7 @@ export interface ProjectMemory {
   category: string;
   key: string;
   value: string;
-  content?: string;
-  importance?: string;
-  created_at?: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
 export interface GitStatus {

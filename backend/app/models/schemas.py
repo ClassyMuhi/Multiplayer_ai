@@ -113,7 +113,6 @@ class AgentMessageRequest(BaseModel):
     message: str = Field(..., min_length=1, description="Instruction or query for Summit agent")
     user_id: Optional[str] = None
     display_name: Optional[str] = None
-    model: Optional[str] = Field(None, description="Optional LLM model override (e.g. groq/llama-3.3-70b-versatile, gemini/gemini-2.0-flash)")
 
 
 class MessageRecord(BaseModel):
@@ -184,31 +183,6 @@ class GitCheckpointResponse(BaseModel):
     commit_hash: str
     message: str
     created_at: datetime
-
-
-class GitRemoteResponse(BaseModel):
-    remote_url: Optional[str] = None
-    has_remote: bool
-    branch: Optional[str] = "main"
-
-
-class GitSetRemoteRequest(BaseModel):
-    remote_url: str = Field(..., min_length=5, description="GitHub repository URL (e.g. https://github.com/user/repo.git)")
-    branch: Optional[str] = Field("main", description="Target branch name")
-
-
-class GitCommitPushRequest(BaseModel):
-    message: str = Field(..., min_length=1, description="Commit message / description")
-    push: bool = Field(True, description="Whether to automatically push to remote GitHub repository")
-
-
-class GitCommitPushResponse(BaseModel):
-    commit_hash: str
-    message: str
-    created_at: datetime
-    pushed: bool
-    push_output: str
-    success: bool
 
 
 # --- Event Stream Schema ---

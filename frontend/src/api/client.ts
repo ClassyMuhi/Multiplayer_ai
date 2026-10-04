@@ -130,39 +130,6 @@ export async function fetchGitDiff(projectId: string): Promise<string> {
   return data.diff;
 }
 
-export async function fetchGitRemote(projectId: string): Promise<{ remote_url: string | null; has_remote: boolean; branch?: string }> {
-  const res = await fetch(`${API_BASE}/projects/${projectId}/git/remote`);
-  if (!res.ok) throw new Error('Failed to fetch git remote');
-  return res.json();
-}
-
-export async function setGitRemote(projectId: string, remoteUrl: string, branch: string = 'main'): Promise<{ remote_url: string; has_remote: boolean; branch: string }> {
-  const res = await fetch(`${API_BASE}/projects/${projectId}/git/remote`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ remote_url: remoteUrl, branch })
-  });
-  if (!res.ok) throw new Error('Failed to set git remote');
-  return res.json();
-}
-
-export async function commitAndPush(projectId: string, message: string, push: boolean = true): Promise<{
-  commit_hash: string;
-  message: string;
-  created_at: string;
-  pushed: boolean;
-  push_output: string;
-  success: boolean;
-}> {
-  const res = await fetch(`${API_BASE}/projects/${projectId}/git/commit-and-push`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, push })
-  });
-  if (!res.ok) throw new Error('Failed to commit and push');
-  return res.json();
-}
-
 export async function createGitCheckpoint(projectId: string, message: string): Promise<GitCheckpoint> {
   const res = await fetch(`${API_BASE}/projects/${projectId}/git/checkpoint`, {
     method: 'POST',
@@ -177,13 +144,12 @@ export async function sendAgentMessage(
   projectId: string,
   message: string,
   userId?: string,
-  displayName?: string,
-  model?: string
+  displayName?: string
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/projects/${projectId}/agent/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, user_id: userId, display_name: displayName, model })
+    body: JSON.stringify({ message, user_id: userId, display_name: displayName })
   });
   if (!res.ok) {
     const data = await res.json();

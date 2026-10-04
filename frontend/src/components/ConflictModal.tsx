@@ -1,6 +1,7 @@
 import React from 'react';
 import type { FileConflictData } from '../types';
-import { ShieldAlert, RefreshCw, AlertTriangle, X } from 'lucide-react';
+import { ShieldAlert, RefreshCw, AlertTriangle } from 'lucide-react';
+
 
 interface ConflictModalProps {
   conflict: FileConflictData | null;
@@ -19,54 +20,47 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-box" style={{ maxWidth: '620px', border: '1px solid var(--vscode-accent-red)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--vscode-accent-red)' }}>
-            <ShieldAlert size={18} />
-            <h3 style={{ fontSize: '13px', fontWeight: 600 }}>Concurrent Edit Conflict Detected</h3>
-          </div>
-          <button className="btn-icon" onClick={onDismiss}>
-            <X size={14} />
-          </button>
+      <div className="modal-box" style={{ maxWidth: '650px', border: '1px solid var(--accent-red)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-red)', marginBottom: '0.8rem' }}>
+          <ShieldAlert size={22} />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Concurrent Edit Conflict Detected</h3>
         </div>
 
-        <p style={{ fontSize: '12px', color: 'var(--vscode-text-secondary)', marginBottom: '0.6rem', lineHeight: '1.4' }}>
-          File <b>{conflict.path}</b> was modified by another collaborator or AI agent on the server while you were editing.
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.8rem', lineHeight: '1.4' }}>
+          File <b>{conflict.path}</b> was modified by another collaborator or Summit AI on the server while you were editing!
           <br />
-          Server version is <b>v{conflict.server_version}</b>, but your local buffer was based on <b>v{conflict.expected_version}</b>.
+          Server version is <b>v{conflict.server_version}</b>, but your editor was based on <b>v{conflict.expected_version}</b>.
         </p>
 
-        <div style={{ marginBottom: '0.8rem' }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--vscode-accent-yellow)', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <AlertTriangle size={12} />
-            <span>Server Content (v{conflict.server_version}):</span>
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-amber)', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <AlertTriangle size={12} /> Server Content (v{conflict.server_version}):
           </div>
           <pre style={{
-            backgroundColor: '#121212',
-            padding: '0.5rem',
-            borderRadius: '3px',
-            fontSize: '11px',
+            backgroundColor: '#000',
+            padding: '0.6rem',
+            borderRadius: '6px',
+            fontSize: '0.75rem',
             fontFamily: 'var(--font-mono)',
-            maxHeight: '160px',
+            maxHeight: '180px',
             overflowY: 'auto',
-            border: '1px solid var(--vscode-border)',
-            color: 'var(--vscode-text-primary)'
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-main)'
           }}>
             {conflict.server_content}
           </pre>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
           <button className="btn btn-secondary" onClick={onDismiss}>
             Cancel
           </button>
           <button
             className="btn btn-secondary"
-            style={{ color: 'var(--vscode-accent-blue)', borderColor: 'var(--vscode-accent-blue)' }}
+            style={{ color: 'var(--accent-blue)', borderColor: 'var(--accent-blue)' }}
             onClick={() => onAcceptServer(conflict.path, conflict.server_content, conflict.server_version)}
           >
-            <RefreshCw size={12} />
-            <span>Reload Server Version (v{conflict.server_version})</span>
+            <RefreshCw size={13} /> Reload Server Version (v{conflict.server_version})
           </button>
           <button
             className="btn btn-danger"

@@ -46,8 +46,7 @@ async def send_agent_message(
             project_id=project_id,
             user_prompt=payload.message,
             user_id=payload.user_id,
-            user_name=payload.display_name,
-            model_override=payload.model
+            user_name=payload.display_name
         )
     )
     session_manager.set_running_task(project_id, task)
