@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Summit: A Multiplayer AI Coding Agent with Persistent Project Memory</title>
+<style>
+  @page {
+    size: letter;
+    margin: 18mm 14mm 18mm 14mm;
+  }
+  
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: "Times New Roman", Times, Georgia, serif;
+    font-size: 10pt;
+    line-height: 1.25;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  /* Single column header for Title and Authors */
+  .paper-header {
+    text-align: center;
+    margin-bottom: 12pt;
+  }
+
+  h1.title {
+    font-size: 20pt;
+    font-weight: bold;
+    margin: 0 0 8pt 0;
+    line-height: 1.2;
+  }
+
+  .authors-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 12pt;
+    font-size: 10pt;
+  }
+
+  .author-block {
+    text-align: center;
+  }
+
+  .author-name {
+    font-weight: bold;
+    font-size: 11pt;
+  }
+
+  .author-dept, .author-inst, .author-loc, .author-email {
+    font-size: 9pt;
+    font-style: italic;
+  }
+
+  .author-email {
+    font-family: "Courier New", Courier, monospace;
+    font-style: normal;
+    font-size: 8.5pt;
+  }
+
+  /* Two Column Layout */
+  .columns {
+    column-count: 2;
+    column-gap: 18pt;
+    column-fill: auto;
+    text-align: justify;
+  }
+
+  /* Abstract & Keywords */
+  .abstract-box {
+    margin-bottom: 10pt;
+  }
+
+  .abstract-title {
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  .keywords-title {
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  /* Section Headings */
+  h2.section-heading {
+    font-size: 10pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 12pt 0 4pt 0;
+    letter-spacing: 0.5pt;
+    break-after: avoid;
+  }
+
+  h3.subsection-heading {
+    font-size: 10pt;
+    font-weight: bold;
+    font-style: italic;
+    margin: 8pt 0 3pt 0;
+    break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 6pt 0;
+    text-indent: 14pt;
+  }
+
+  p.no-indent {
+    text-indent: 0;
+  }
+
+  ul, ol {
+    margin: 0 0 6pt 0;
+    padding-left: 18pt;
+  }
+
+  li {
+    margin-bottom: 2pt;
+    text-align: justify;
+  }
+
+  /* Math and Formulas */
+  .equation {
+    text-align: center;
+    margin: 6pt 0;
+    font-family: "Cambria Math", "Times New Roman", serif;
+    font-style: italic;
+    font-size: 9.5pt;
+  }
+
+  .eq-number {
+    float: right;
+    font-style: normal;
+  }
+
+  /* Code & Algorithm Boxes */
+  .algorithm-box {
+    border: 1px solid #000;
+    padding: 6pt 8pt;
+    margin: 8pt 0;
+    font-size: 8.5pt;
+    background: #fdfdfd;
+    break-inside: avoid;
+  }
+
+  .algorithm-title {
+    font-weight: bold;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3pt;
+    margin-bottom: 4pt;
+  }
+
+  .algorithm-code {
+    font-family: "Courier New", Courier, monospace;
+    line-height: 1.25;
+    white-space: pre-wrap;
+  }
+
+  /* Tables */
+  table.ieee-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0;
+    font-size: 8pt;
+    break-inside: avoid;
+  }
+
+  table.ieee-table caption {
+    font-size: 8.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 4pt;
+    letter-spacing: 0.3pt;
+  }
+
+  table.ieee-table th {
+    border-top: 1.5pt solid #000;
+    border-bottom: 1pt solid #000;
+    padding: 3pt 4pt;
+    text-align: left;
+    font-weight: bold;
+  }
+
+  table.ieee-table td {
+    padding: 2.5pt 4pt;
+    border-bottom: 0.5pt solid #ddd;
+  }
+
+  table.ieee-table tr:last-child td {
+    border-bottom: 1.5pt solid #000;
+  }
+
+  /* Figures */
+  .figure-box {
+    border: 1px solid #333;
+    padding: 6pt;
+    margin: 8pt 0;
+    background: #fafafa;
+    font-size: 8pt;
+    break-inside: avoid;
+  }
+
+  .figure-caption {
+    font-size: 8.5pt;
+    font-style: italic;
+    text-align: center;
+    margin-top: 4pt;
+  }
+
+  /* References */
+  .references {
+    font-size: 8pt;
+    line-height: 1.2;
+  }
+
+  .ref-item {
+    margin-bottom: 3pt;
+    text-indent: -14pt;
+    margin-left: 14pt;
+    text-align: justify;
+  }
+</style>
+</head>
+<body>
+
+<div class="paper-header">
+  <h1 class="title">Summit: A Multiplayer AI Coding Agent with Persistent Project Memory</h1>
+  
+  <div class="authors-container">
+    <div class="author-block">
+      <div class="author-name">Muhilan S</div>
+      <div class="author-dept">Dept. of Computer Science and Engineering</div>
+      <div class="author-inst">Rajalakshmi Engineering College</div>
+      <div class="author-loc">Chennai, India</div>
+      <div class="author-email">muhilan.s.2024.csd@rajalakshmi.edu.in</div>
+    </div>
+    <div class="author-block">
+      <div class="author-name">Dhanesh S K</div>
+      <div class="author-dept">Dept. of Computer Science and Engineering</div>
+      <div class="author-inst">Rajalakshmi Engineering College</div>
+      <div class="author-loc">Chennai, India</div>
+      <div class="author-email">dhanesh.sk.2024.csd@rajalakshmi.edu.in</div>
+    </div>
+  </div>
+</div>
+
+<div class="columns">
+
+  <div class="abstract-box">
+    <p class="no-indent">
+      <span class="abstract-title">Abstract</span>—Contemporary AI coding assistants operate in a stateless, single-user paradigm. Each interactive session starts in isolation without awareness of prior architectural decisions, team conventions, or project evolution. Furthermore, existing tools lack support for shared, real-time AI collaboration among multiple human developers interacting on the same codebase simultaneously. This paper presents <b>Summit</b>, a collaborative multiplayer AI coding workspace designed to address both limitations through two core mechanisms: (1) a persistent project memory system backed by an ACID-compliant structured SQLite database that retains architectural decisions, coding standards, and execution history across sessions; and (2) a multiplayer WebSocket room architecture that synchronizes multiple human developers with a shared AI coding agent. Summit incorporates an asynchronous Python agent engine built on FastAPI, a React 19/TypeScript/Monaco workspace frontend, codebase-aware context retrieval, and optimistic concurrency control for concurrent file edits. The agent executes a multi-turn tool-calling loop (supporting workspace file I/O, terminal execution, structured memory updates, and Git checkpoints) routed through LiteLLM. Forensic source code analysis and a 17-test functional verification suite validate system correctness. Comprehensive engineering trade-offs, formal algorithms, and proposed empirical benchmarks are presented.
+    </p>
+    <p class="no-indent" style="margin-top: 4pt;">
+      <span class="keywords-title">Keywords</span>—AI coding agent, persistent project memory, multiplayer collaboration, WebSocket, LLM tool calling, optimistic concurrency control, context retrieval, FastAPI.
+    </p>
+  </div>
+
+  <h2 class="section-heading">I. Introduction</h2>
+  <p>
+    Large Language Model (LLM)-based coding assistants, such as GitHub Copilot [1], Amazon CodeWhisperer [2], and OpenAI ChatGPT [3], have fundamentally reshaped software engineering workflows. Despite substantial individual developer productivity enhancements [6], state-of-the-art tools exhibit two fundamental structural deficiencies:
+  </p>
+  <p>
+    <b>1) The Episodic-Temporal Deficit:</b> Conventional assistants operate ephemerally. Prior architectural choices, convention agreements, or debugging discoveries are lost across disjoint sessions [4]. Developers are forced into repetitive prompt engineering to re-explain domain context.
+  </p>
+  <p>
+    <b>2) The Single-User Isolation Paradigm:</b> Software engineering is fundamentally collaborative [5]. While teams interact concurrently over shared repositories, AI coding assistants remain private single-tenant tools. Existing platforms provide no mechanism for distributed developers to co-interact with a shared agent or inspect real-time agent telemetry.
+  </p>
+  <p>
+    To bridge this gap, we present <b>Summit</b>, an open, extensible multiplayer AI coding workspace with persistent project memory. Summit enables distributed human developers to connect concurrently to a collaborative project room and interact with a unified AI coding agent. The agent maintains long-term project awareness via a dual-tier SQLite memory architecture, pairing conversation history with structured project knowledge. An automated context assembly pipeline extracts project memories, conversation logs, and path-relevance-ranked codebase files into each prompt.
+  </p>
+
+  <h3 class="subsection-heading">A. Key Contributions</h3>
+  <ul>
+    <li><b>Multiplayer Agent Room Architecture:</b> A real-time FastAPI WebSocket engine that broadcasts all agent actions (tool calls, file mutations, terminal streams, lifecycle state transitions) to all room participants concurrently.</li>
+    <li><b>Dual-Memory Persistence Engine:</b> An ACID-compliant relational memory model decoupling ephemeral conversational logs (<code>messages</code>) from persistent architectural facts (<code>project_memories</code>) with upsert semantics.</li>
+    <li><b>Codebase Context Retrieval Algorithm:</b> A deterministic path-relevance algorithm that injects relevant files, recent conversation, and the full project memory corpus into LLM prompts without expensive embedding overhead.</li>
+    <li><b>Optimistic Concurrency Control:</b> Integer-based file versioning detecting edit collisions between developers and agents, returning standard HTTP 409 responses with conflict resolution payloads.</li>
+    <li><b>Forensic Analysis and Formalization:</b> Complete algorithmic definitions for context assembly and agent execution loops, validated against 17 integration test cases.</li>
+  </ul>
+
+  <h2 class="section-heading">II. Related Work</h2>
+  <h3 class="subsection-heading">A. AI Coding Assistants and Autonomous Agents</h3>
+  <p>
+    Modern AI developer tools have progressed from line-level completion to autonomous multi-step agents. GitHub Copilot [1] and CodeWhisperer [2] rely strictly on active in-editor buffers. SWE-agent [8] introduced Agent-Computer Interfaces (ACI) for resolving real-world GitHub issues [9]. Devin [10] and OpenDevin [11] demonstrated end-to-end task execution in sandboxed shells, while CodeAct [12] pioneered executable Python actions. However, these systems operate in single-tenant, non-persistent environments.
+  </p>
+
+  <h3 class="subsection-heading">B. Memory in LLM Architectures</h3>
+  <p>
+    Zhong et al. [13] categorize agent memory into working, episodic, semantic, and procedural components. Standard RAG architectures [14]–[16] retrieve snippets using dense vector embeddings over static repositories. In contrast, Summit adopts structured, human-interpretable relational memory authored dynamically by both developers and agents, ensuring full injection determinism.
+  </p>
+
+  <h3 class="subsection-heading">C. Collaborative Development Environments</h3>
+  <p>
+    Real-time collaborative editing is typically governed by Operational Transformation (OT) [20] or Conflict-Free Replicated Data Types (CRDTs) [21]. While systems like VS Code Live Share operate at the keystroke layer, Summit implements file-level optimistic concurrency control tailored to human-agent co-authoring.
+  </p>
+
+  <h2 class="section-heading">III. System Architecture and Methodology</h2>
+  
+  <div class="figure-box">
+    <b>Client Tier (React 19 / Monaco / Xterm)</b><br>
+    &nbsp;&nbsp;↕ <i>HTTP REST + WebSockets</i><br>
+    <b>FastAPI Backend (Uvicorn ASGI)</b>
+    <ul style="margin:2pt 0; padding-left:12pt;">
+      <li>API Routers (9 Modules) | SessionManager (WS Rooms)</li>
+      <li>SummitAdapter (LiteLLM Router) | ContextRetriever</li>
+      <li>WorkspaceManager (OCC) | GitService (Checkpoints)</li>
+    </ul>
+    &nbsp;&nbsp;↕ <i>Direct Connection SQLite Pool</i><br>
+    <b>Persistence Tier (SQLite: summit.db)</b>
+  </div>
+  <div class="figure-caption">Fig. 1. Summit Full-Stack Multiplayer Architecture.</div>
+
+  <h3 class="subsection-heading">A. Multiplayer WebSocket Room Synchronization</h3>
+  <p>
+    Project-level concurrency is governed by the <code>SessionManager</code>. Active connections are stored in an in-memory dictionary:
+  </p>
+  <div class="equation">
+    C: ProjectID → { WS<sub>i</sub> ↦ (UserID<sub>i</sub>, DisplayName<sub>i</sub>) }
+    <span class="eq-number">(1)</span>
+  </div>
+  <p>
+    When a client connects to <code>/api/projects/{id}/agent/stream</code>, the server accepts the WebSocket handshake, registers the socket, and broadcasts a <code>USER_JOINED</code> event. Substantive messages follow a server-to-client broadcast paradigm. To prevent race conditions, only one active LLM task executes per project room at any instant.
+  </p>
+
+  <h3 class="subsection-heading">B. Dual-Tier Relational Memory Formulation</h3>
+  <p>
+    Summit establishes two distinct persistence vectors within SQLite:
+  </p>
+  <p>
+    <b>1) Conversation Memory (M<sub>conv</sub>):</b> An append-only sequence of user instructions and agent responses:
+  </p>
+  <div class="equation">
+    M<sub>conv</sub> = ⟨m<sub>1</sub>, m<sub>2</sub>, ..., m<sub>T</sub>⟩
+    <span class="eq-number">(2)</span>
+  </div>
+  <p>
+    <b>2) Project Memory (M<sub>proj</sub>):</b> A set of structured key-value triples:
+  </p>
+  <div class="equation">
+    M<sub>proj</sub> = { (c<sub>k</sub>, k, v<sub>k</sub>) | k ∈ K }
+    <span class="eq-number">(3)</span>
+  </div>
+  <p>
+    where c<sub>k</sub> ∈ {architecture, decision, convention, task}, enforced by a unique constraint <code>UNIQUE(project_id, key)</code> executing upsert operations.
+  </p>
+
+  <h3 class="subsection-heading">C. Optimistic Concurrency Control (OCC)</h3>
+  <p>
+    To prevent conflicting overwrites between human developers and autonomous tool-writes, every file record maintains an integer version V ∈ ℕ<sup>+</sup>. A client update request R = (p, C<sub>new</sub>, V<sub>exp</sub>) succeeds if and only if V<sub>exp</sub> = V<sub>curr</sub>. Upon mismatch, the server returns HTTP 409 (<code>Conflict</code>):
+  </p>
+  <div class="equation">
+    Δ = Diff(C<sub>server</sub>, C<sub>client</sub>)
+    <span class="eq-number">(4)</span>
+  </div>
+
+  <h2 class="section-heading">IV. Algorithms and Implementation</h2>
+
+  <div class="algorithm-box">
+    <div class="algorithm-title">Algorithm 1: Codebase Context Construction</div>
+    <div class="algorithm-code">INPUT: project_id, user_prompt
+OUTPUT: formatted_prompt_context
+
+1. memories  <- Repository.get_memories(project_id)
+2. messages  <- Repository.get_messages(project_id, limit=10)
+3. recent    <- messages[-6:]  # Last 6 of 10 messages
+4. all_files <- WorkspaceManager.list_files(project_id)
+
+5. query_terms <- [t.lower() for t in user_prompt.split() if len(t) > 2]
+6. FOR file_path IN all_files DO:
+     score <- 0
+     IF file_path ends with ('main.py', 'README.md', 'app.py', 'index.ts') THEN:
+         score <- score + 2
+     FOR term IN query_terms DO:
+         IF term in file_path.lower() THEN:
+             score <- score + 5
+     file_scores[file_path] <- score
+
+7. selected_files <- Top 4 files by score
+8. file_blocks <- []
+9. FOR path IN selected_files DO:
+     content <- WorkspaceManager.read_file(path)
+     lines <- content.splitlines()
+     IF len(lines) > 200 THEN:
+         content <- JOIN(lines[:200]) + "\n...[Truncated]"
+     file_blocks.append(f"--- FILE: {path} ---\n{content}")
+
+10. RETURN FormatPrompt(memories, recent, file_blocks, user_prompt)</div>
+  </div>
+
+  <div class="algorithm-box">
+    <div class="algorithm-title">Algorithm 2: Multi-Turn Autonomous Tool Loop</div>
+    <div class="algorithm-code">INPUT: project_id, workspace_dir, user_prompt
+1. context  <- BuildContext(project_id, user_prompt)
+2. messages <- [SystemMessage, UserMessage(context)]
+3. FOR turn = 0 TO 9 DO:
+     CheckPause(project_id)
+     BroadcastStatus(THINKING)
+     response <- litellm.acompletion(model, messages, tools)
+     msg <- response.choices[0].message
+     
+     IF msg.content is not empty THEN:
+         BroadcastMessage(msg.content)
+     IF msg.tool_calls is empty THEN:
+         BREAK  # Task complete
+         
+     BroadcastStatus(EXECUTING)
+     messages.append(msg)
+     
+     FOR tool_call IN msg.tool_calls DO:
+         name <- tool_call.function.name
+         args <- JSON.parse(tool_call.function.arguments)
+         
+         SWITCH name:
+           CASE "read_file":
+             result <- WorkspaceManager.read(args.path)
+           CASE "write_file":
+             ver <- WorkspaceManager.write(args.path, args.content)
+             BroadcastEvent(FILE_CHANGED, args.path, ver)
+             result <- f"Wrote {args.path} (v{ver})"
+           CASE "run_terminal":
+             code, out <- ExecuteSubprocess(args.command)
+             BroadcastEvent(TERMINAL_OUTPUT, args.command, out, code)
+             result <- f"Exit {code}: {out}"
+           CASE "save_memory":
+             Repository.save_memory(args.key, args.value, args.category)
+             BroadcastEvent(MEMORY_UPDATED, args.key, args.value)
+             result <- f"Saved memory: {args.key}"
+           CASE "git_checkpoint":
+             chk <- GitService.create_checkpoint(args.message)
+             BroadcastEvent(GIT_CHECKPOINT, chk.hash, args.message)
+             result <- f"Committed checkpoint {chk.hash}"
+             
+         messages.append(ToolResultMessage(tool_call.id, result))
+
+4. BroadcastStatus(COMPLETED)
+5. BroadcastEvent(SESSION_COMPLETE)</div>
+  </div>
+
+  <h2 class="section-heading">V. Verification and Evaluation</h2>
+
+  <table class="ieee-table">
+    <caption>TABLE I: System Subsystems and Claim Traceability Matrix</caption>
+    <thead>
+      <tr>
+        <th>Subsystem</th>
+        <th>Module / Test File</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Multiplayer Room</td>
+        <td><code>api/ws.py</code>, <code>test_api.py</code></td>
+        <td><b>Verified Passing</b></td>
+      </tr>
+      <tr>
+        <td>Event Normalizer</td>
+        <td><code>test_event_normalizer.py</code></td>
+        <td><b>Verified Passing</b></td>
+      </tr>
+      <tr>
+        <td>Relational Memory</td>
+        <td><code>database/repository.py</code></td>
+        <td><b>Verified Passing</b></td>
+      </tr>
+      <tr>
+        <td>Concurrency (OCC)</td>
+        <td><code>test_multiplayer_memory.py</code></td>
+        <td><b>Verified Passing</b></td>
+      </tr>
+      <tr>
+        <td>Git Checkpoint</td>
+        <td><code>git/git_service.py</code></td>
+        <td><b>Verified Passing</b></td>
+      </tr>
+      <tr>
+        <td>Path Traversal Security</td>
+        <td><code>test_workspace.py</code></td>
+        <td><b>Verified Passing</b></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="subsection-heading">A. Proposed Quantitative Benchmark Protocols</h3>
+  <p>
+    <b>1) Memory Recall Fidelity (R<sub>mem</sub>):</b> Fraction of previously recorded architectural constraints correctly satisfied in subsequent multi-turn sessions:
+  </p>
+  <div class="equation">
+    R<sub>mem</sub> = |K<sub>adhered</sub>| / |K<sub>stored</sub>|
+    <span class="eq-number">(5)</span>
+  </div>
+  <p>
+    <b>2) Collaboration Collision Rate (C<sub>occ</sub>):</b> Frequency of edit conflicts generated during asynchronous human-agent editing under synthetic load.
+  </p>
+  <p>
+    <b>3) Multiplayer End-to-End Latency (τ<sub>95</sub>):</b> 95th percentile event broadcast delay across distributed WebSocket clients.
+  </p>
+
+  <h2 class="section-heading">VI. Limitations and Future Work</h2>
+  <ol>
+    <li><b>Semantic Memory Pruning:</b> Summit currently injects all stored memories into prompt sections without token budgeting. Integrating vector embedding stores (e.g., ChromaDB) with semantic similarity filtering will prevent context window overflow.</li>
+    <li><b>Keystroke-Level CRDT Editing:</b> Upgrading file-level OCC to fine-grained Conflict-Free Replicated Data Types (CRDTs) will enable simultaneous in-line typing between developers and the agent.</li>
+    <li><b>Sandboxed Code Execution:</b> Incorporating microVMs or Docker containers will protect host operating systems from untrusted agent shell commands.</li>
+  </ol>
+
+  <h2 class="section-heading">VII. Conclusion</h2>
+  <p>
+    This paper presented <b>Summit</b>, a multiplayer AI coding agent workspace with persistent project memory. By combining real-time WebSocket room multiplexing, dual-tier SQLite memory persistence, deterministic context retrieval, and optimistic concurrency control, Summit overcomes the isolation and statelessness of current AI developer tools. Forensic source verification and functional test suites confirm architectural viability, laying the groundwork for collaborative human-AI team engineering.
+  </p>
+
+  <h2 class="section-heading">References</h2>
+  <div class="references">
+    <div class="ref-item">[1] GitHub, "GitHub Copilot: Your AI pair programmer," GitHub Inc., 2021. [Online]. Available: https://copilot.github.com</div>
+    <div class="ref-item">[2] Amazon Web Services, "Amazon CodeWhisperer AI coding companion," AWS, 2022.</div>
+    <div class="ref-item">[3] OpenAI, "Introducing ChatGPT," OpenAI, 2022. [Online]. Available: https://openai.com/blog/chatgpt</div>
+    <div class="ref-item">[4] M. Hatalis et al., "Memory matters: The need to improve long-term memory in LLM-agents," in <i>Proc. AAAI Workshop on Cognitive Architectures for LLM Agents</i>, 2024.</div>
+    <div class="ref-item">[5] A. Ko, B. Myers, M. Coblenz, and H. Aung, "An exploratory study of how developers seek, relate, and collect relevant information during software maintenance tasks," <i>IEEE Trans. Software Eng.</i>, vol. 32, no. 12, pp. 971–987, Dec. 2006.</div>
+    <div class="ref-item">[6] S. Peng, E. Kalliamvakou, P. Croft, and M. Counts, "The impact of AI on developer productivity: Evidence from GitHub Copilot," <i>arXiv:2302.06590</i>, 2023.</div>
+    <div class="ref-item">[7] Tabnine, "Tabnine AI: Whole-project AI code completion," Tabnine, 2023.</div>
+    <div class="ref-item">[8] J. Yang, C. Jimenez, A. Wettig, K. Lieret, S. Yao, K. Narasimhan, and O. Press, "SWE-agent: Agent-computer interfaces enable automated software engineering," <i>arXiv:2405.15793</i>, 2024.</div>
+    <div class="ref-item">[9] C. Jimenez et al., "SWE-bench: Can language models resolve real-world GitHub issues?" in <i>Proc. ICLR</i>, 2024.</div>
+    <div class="ref-item">[10] Cognition AI, "Introducing Devin, the first AI software engineer," Cognition AI, 2024.</div>
+    <div class="ref-item">[11] X. Wang et al., "OpenDevin: An open platform for AI software developers as generalist agents," <i>arXiv:2407.16741</i>, 2024.</div>
+    <div class="ref-item">[12] X. Wang et al., "Executable code actions elicit better LLM agents," <i>arXiv:2402.01030</i>, 2024.</div>
+    <div class="ref-item">[13] Z. Zhang, B. Chen, F. Liu, and B. Liu, "A survey on the memory mechanism of large language model based agents," <i>arXiv:2404.13501</i>, 2024.</div>
+    <div class="ref-item">[14] P. Lewis et al., "Retrieval-augmented generation for knowledge-intensive NLP tasks," in <i>Proc. NeurIPS</i>, 2020, pp. 9459–9474.</div>
+    <div class="ref-item">[15] D. Shrivastava, H. Larochelle, and D. Tarlow, "Repository-level prompt generation for large language models of code," in <i>Proc. ICML</i>, 2023.</div>
+    <div class="ref-item">[16] F. Zhang et al., "RepoCoder: Repository-level code completion through iterative retrieval and generation," in <i>Proc. EMNLP</i>, 2023.</div>
+    <div class="ref-item">[17] U. Alon, R. Sadaka, O. Levy, and E. Yahav, "Structural language models of code," in <i>Proc. ICML</i>, 2020.</div>
+    <div class="ref-item">[18] B. Ross et al., "From Copilot to colleague: Exploring how developers interact with AI pair programmers," in <i>Proc. CHI Extended Abstracts</i>, 2023.</div>
+    <div class="ref-item">[19] E. Jiang et al., "Discovering the syntax and strategies of natural language programming with generative language models," in <i>Proc. CHI</i>, 2022.</div>
+    <div class="ref-item">[20] C. Ellis and S. Gibbs, "Concurrency control in groupware systems," in <i>Proc. ACM SIGMOD</i>, 1989, pp. 399–407.</div>
+    <div class="ref-item">[21] G. Oster, P. Urso, P. Molli, and A. Imine, "Data consistency for P2P collaborative editing," in <i>Proc. ACM CSCW</i>, 2006, pp. 259–267.</div>
+    <div class="ref-item">[22] S. Ramirez, "FastAPI: High performance, easy to learn, fast to code, ready for production," 2018. [Online]. Available: https://fastapi.tiangolo.com</div>
+  </div>
+
+</div>
+
+</body>
+</html>
