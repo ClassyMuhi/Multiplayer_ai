@@ -45,16 +45,16 @@ Modern AI developer tools have progressed from line-level completion to autonomo
 
 | Capability / Feature | GitHub Copilot [1] | SWE-agent [8] | Devin / OpenDevin [10, 11] | VS Code Live Share | Replit AI | **Summit (Ours)** |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Browser-Native Web IDE** | ❌ | ❌ | ⚠️ (Basic Viewer) | ❌ | ✅ | **✅ (Monaco + Xterm)** |
-| **Multiplayer Collaboration Room** | ❌ | ❌ | ❌ | ✅ | ⚠️ (Separate) | **✅ (Shared Room)** |
-| **Real-Time Telemetry Broadcast** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ (15 WS Events)** |
-| **Cross-Session Project Memory** | ❌ | ❌ | ❌ | ❌ | ⚠️ (Ephemeral) | **✅ (SQLite Relational)** |
-| **Optimistic Concurrency Control** | ❌ | ❌ | ❌ | ⚠️ (OT/P2P) | ⚠️ (OT Lock) | **✅ (OCC HTTP 409)** |
-| **Autonomous Multi-Tool Agent Loop** | ❌ | ✅ | ✅ | ❌ | ⚠️ (Assisted) | **✅ (5 Core Tools)** |
-| **Integrated Terminal Shell (Xterm.js)** | ❌ | ❌ | ⚠️ (Container Log) | ⚠️ (Shared Host) | ✅ | **✅ (Bidirectional PTY)** |
-| **Live Sandboxed Web App Preview** | ❌ | ❌ | ⚠️ (Port Forward) | ⚠️ (Shared Port) | ✅ | **✅ (Dynamic Iframe)** |
-| **Multi-LLM Provider Routing** | ❌ | ❌ | ⚠️ (Single Config) | ❌ | ❌ | **✅ (LiteLLM Multi-Key)** |
-| **Deterministic Context Retrieval** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ (Path Relevance)** |
+| **Browser-Native Web IDE** | No | No | Partial (Viewer) | No | Yes | **Yes (Monaco + Xterm)** |
+| **Multiplayer Collaboration Room** | No | No | No | Yes | Partial (Separate) | **Yes (Shared Room)** |
+| **Real-Time Telemetry Broadcast** | No | No | No | No | No | **Yes (15 WS Events)** |
+| **Cross-Session Project Memory** | No | No | No | No | Partial (Ephemeral) | **Yes (SQLite Relational)** |
+| **Optimistic Concurrency Control** | No | No | No | Partial (OT/P2P) | Partial (Lock) | **Yes (OCC HTTP 409)** |
+| **Autonomous Multi-Tool Agent Loop** | No | Yes | Yes | No | Partial (Assisted) | **Yes (5 Core Tools)** |
+| **Integrated Terminal Shell (Xterm.js)** | No | No | Partial (Logs) | Partial (Shared) | Yes | **Yes (Bidirectional PTY)** |
+| **Live Sandboxed Web App Preview** | No | No | Partial (Port) | Partial (Shared) | Yes | **Yes (Dynamic Iframe)** |
+| **Multi-LLM Provider Routing** | No | No | Partial (Single) | No | No | **Yes (LiteLLM Multi-Key)** |
+| **Deterministic Context Retrieval** | No | No | No | No | No | **Yes (Path Relevance)** |
 
 ---
 

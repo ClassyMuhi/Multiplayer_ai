@@ -86,16 +86,16 @@ Zhong et al. \cite{zhang2024memorysurvey} categorize agent memory into working, 
 \toprule
 \textbf{Capability / Feature} & \textbf{GitHub Copilot} \cite{copilot} & \textbf{SWE-agent} \cite{yang2024sweagent} & \textbf{Devin / OpenDevin} \cite{devin2024, wang2024opendevin} & \textbf{VS Code Live Share} & \textbf{Replit AI} & \textbf{Summit (Ours)} \\
 \midrule
-Browser-Native Web IDE & ❌ & ❌ & ⚠️ (Basic Viewer) & ❌ & ✅ & \textbf{✅ (Monaco + Xterm)} \\
-Multiplayer Collaboration Room & ❌ & ❌ & ❌ & ✅ & ⚠️ (Separate Agents) & \textbf{✅ (Shared Room)} \\
-Real-Time Telemetry Broadcast & ❌ & ❌ & ❌ & ❌ & ❌ & \textbf{✅ (15 WS Events)} \\
-Cross-Session Project Memory & ❌ & ❌ & ❌ & ❌ & ⚠️ (Ephemeral) & \textbf{✅ (SQLite Relational)} \\
-Optimistic Concurrency Control & ❌ & ❌ & ❌ & ⚠️ (OT/P2P) & ⚠️ (OT Lock) & \textbf{✅ (OCC HTTP 409)} \\
-Autonomous Multi-Tool Agent Loop & ❌ & ✅ & ✅ & ❌ & ⚠️ (Assisted) & \textbf{✅ (5 Core Tools)} \\
-Integrated Terminal Shell (Xterm.js) & ❌ & ❌ & ⚠️ (Container Log) & ⚠️ (Shared Host) & ✅ & \textbf{✅ (Bidirectional PTY)} \\
-Live Sandboxed Web App Preview & ❌ & ❌ & ⚠️ (Port Forward) & ⚠️ (Shared Port) & ✅ & \textbf{✅ (Dynamic Iframe)} \\
-Multi-LLM Routing & ❌ & ❌ & ⚠️ (Single Config) & ❌ & ❌ & \textbf{✅ (LiteLLM Multi-Key)} \\
-Deterministic Context Retrieval & ❌ & ❌ & ❌ & ❌ & ❌ & \textbf{✅ (Path Relevance)} \\
+Browser-Native Web IDE & No & No & Partial (Viewer) & No & Yes & \textbf{Yes (Monaco + Xterm)} \\
+Multiplayer Collaboration Room & No & No & No & Yes & Partial (Separate) & \textbf{Yes (Shared Room)} \\
+Real-Time Telemetry Broadcast & No & No & No & No & No & \textbf{Yes (15 WS Events)} \\
+Cross-Session Project Memory & No & No & No & No & Partial (Ephemeral) & \textbf{Yes (SQLite Relational)} \\
+Optimistic Concurrency Control & No & No & No & Partial (OT/P2P) & Partial (Lock) & \textbf{Yes (OCC HTTP 409)} \\
+Autonomous Multi-Tool Agent Loop & No & Yes & Yes & No & Partial (Assisted) & \textbf{Yes (5 Core Tools)} \\
+Integrated Terminal Shell (Xterm.js) & No & No & Partial (Logs) & Partial (Shared) & Yes & \textbf{Yes (Bidirectional PTY)} \\
+Live Sandboxed Web App Preview & No & No & Partial (Port) & Partial (Shared) & Yes & \textbf{Yes (Dynamic Iframe)} \\
+Multi-LLM Routing & No & No & Partial (Single) & No & No & \textbf{Yes (LiteLLM Multi-Key)} \\
+Deterministic Context Retrieval & No & No & No & No & No & \textbf{Yes (Path Relevance)} \\
 \bottomrule
 \end{tabular}
 \end{table*}
