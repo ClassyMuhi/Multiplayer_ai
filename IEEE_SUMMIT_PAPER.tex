@@ -25,7 +25,7 @@
 
 \begin{document}
 
-\title{Summit: A Multiplayer AI Coding Agent with Persistent Project Memory\\
+\title{Summit: A Collaborative Multiplayer Web IDE and AI Coding Agent with Persistent Project Memory\\
 \thanks{This research was supported by the Department of Computer Science and Engineering.}
 }
 
@@ -39,34 +39,37 @@ Chennai, India \\
 \maketitle
 
 \begin{abstract}
-Contemporary AI coding assistants operate in a stateless, single-user paradigm. Each interactive session starts in isolation without awareness of prior architectural decisions, team conventions, or project evolution. Furthermore, existing tools lack support for shared, real-time AI collaboration among multiple human developers interacting on the same codebase simultaneously. This paper presents \textbf{Summit}, a collaborative multiplayer AI coding workspace designed to address both limitations through two core mechanisms: (1) a persistent project memory system backed by an ACID-compliant structured SQLite database that retains architectural decisions, coding standards, and execution history across sessions; and (2) a multiplayer WebSocket room architecture that synchronizes multiple human developers with a shared AI coding agent. Summit incorporates an asynchronous Python agent engine built on FastAPI, a React/TypeScript/Monaco workspace frontend, codebase-aware context retrieval, and optimistic concurrency control for concurrent file edits. The agent executes a multi-turn tool-calling loop (supporting workspace file I/O, terminal execution, structured memory updates, and Git checkpoints) routed through LiteLLM. Forensic source code analysis and a 17-test functional verification suite validate system correctness. Comprehensive engineering trade-offs, formal algorithms, and proposed empirical benchmarks are presented.
+Contemporary AI coding assistants operate in a stateless, single-user paradigm, while web-based integrated development environments (Web IDEs) lack tight, real-time collaboration with shared autonomous agents. Each session begins without awareness of prior architectural decisions, team conventions, or project evolution. Furthermore, existing developer environments do not support synchronized multi-user interaction with a unified AI coding agent. This paper presents \textbf{Summit}, a collaborative, browser-native Web IDE and multiplayer AI coding workspace designed to bridge these gaps. Summit introduces three core architectural mechanisms: (1) a full-featured browser-native Web IDE integrating the Monaco Editor, an Xterm.js terminal emulator, live sandboxed web previewing, and optimistic concurrency control (OCC); (2) a persistent project memory system backed by an ACID-compliant structured SQLite database that retains architectural decisions, coding conventions, and execution history across sessions; and (3) a multiplayer WebSocket room architecture synchronizing multiple human developers with a shared AI coding agent. Summit's backend employs FastAPI with an asynchronous multi-turn agent engine supporting multi-provider LLM routing (LiteLLM) and local Git checkpointing. Forensic source code analysis, a comparative feature matrix, and a 17-test functional verification suite confirm architectural validity.
 \end{abstract}
 
 \begin{IEEEkeywords}
-AI coding agent, persistent project memory, multiplayer collaboration, WebSocket, LLM tool calling, optimistic concurrency control, context retrieval, FastAPI.
+Web IDE, collaborative software engineering, AI coding agent, persistent project memory, multiplayer collaboration, WebSocket, Monaco Editor, Xterm.js, optimistic concurrency control, FastAPI.
 \end{IEEEkeywords}
 
 \section{Introduction}
-Large Language Model (LLM)-based coding assistants, such as GitHub Copilot \cite{copilot}, Amazon CodeWhisperer \cite{codewhisperer}, and OpenAI ChatGPT \cite{chatgpt}, have redefined software engineering workflows. Despite significant individual productivity enhancements \cite{peng2023copilot}, state-of-the-art tools exhibit two fundamental structural deficiencies:
+Large Language Model (LLM)-based coding assistants, such as GitHub Copilot \cite{copilot}, Amazon CodeWhisperer \cite{codewhisperer}, and OpenAI ChatGPT \cite{chatgpt}, alongside modern Cloud and Web Integrated Development Environments (Web IDEs), have redefined modern software engineering. However, the intersection of Web IDEs and AI coding tools currently suffers from two fundamental architectural deficits:
 
 \begin{enumerate}
-    \item \textbf{The Episodic-Temporal Deficit:} Conventional assistants operate ephemerally. Prior architectural choices, convention agreements, or debugging discoveries are lost across disjoint sessions \cite{hatalis2024memory}. Developers are forced into repetitive prompt engineering to re-explain domain context.
-    \item \textbf{The Single-User Isolation Paradigm:} Software engineering is fundamentally collaborative \cite{ko2006exploratory}. While teams interact concurrently over shared repositories, AI coding assistants remain private single-tenant tools. Existing platforms provide no mechanism for distributed developers to co-interact with a shared agent or inspect real-time agent telemetry.
+    \item \textbf{The Episodic-Temporal Deficit:} Conventional assistants operate ephemerally. Prior architectural choices, team convention agreements, and historical debugging discoveries are lost across disjoint sessions \cite{hatalis2024memory}. Developers are forced into repetitive prompt engineering to re-explain project context.
+    \item \textbf{The Single-User Isolation Paradigm:} Software engineering is inherently collaborative \cite{ko2006exploratory}. While teams work concurrently over shared repositories, AI coding assistants remain private, single-tenant tools. Existing platforms provide no mechanism for distributed developers inside a shared Web IDE to co-interact with an AI agent or inspect real-time agent telemetry and terminal actions.
 \end{enumerate}
 
-To bridge this gap, we present \textbf{Summit}, an open, extensible multiplayer AI coding workspace with persistent project memory. Summit enables distributed human developers to connect concurrently to a collaborative project room and interact with a unified AI coding agent. The agent maintains long-term project awareness via a dual-tier SQLite memory architecture, pairing conversation history with structured project knowledge. An automated context assembly pipeline extracts project memories, conversation logs, and path-relevance-ranked codebase files into each prompt.
+To bridge this gap, we present \textbf{Summit}, a collaborative browser-native Web IDE and multiplayer AI coding workspace with persistent project memory. Summit enables distributed human developers to connect concurrently to a shared workspace room, edit code with syntax-highlighted Monaco buffers, run interactive terminal commands via Xterm.js, view live web application previews, and co-direct an autonomous AI coding agent. The agent maintains long-term project awareness via a dual-tier SQLite memory architecture, pairing conversation history with structured project knowledge. An automated context assembly pipeline extracts project memories, conversation logs, and path-relevance-ranked codebase files into each prompt.
 
 \subsection{Key Contributions}
 The main contributions of this paper include:
 \begin{itemize}
-    \item \textbf{Multiplayer Agent Room Architecture:} A real-time FastAPI WebSocket engine that broadcasts all agent actions (tool calls, file mutations, terminal streams, lifecycle state transitions) to all room participants concurrently.
+    \item \textbf{Browser-Native Web IDE Architecture:} A unified React 19/TypeScript IDE featuring the Monaco Editor, an integrated Xterm.js terminal subsystem, live sandboxed web previews, and visual conflict resolution.
+    \item \textbf{Multiplayer Agent Room Synchronization:} A real-time FastAPI WebSocket engine broadcasting all agent actions (tool calls, file mutations, terminal streams, lifecycle state transitions) to all room participants concurrently.
     \item \textbf{Dual-Memory Persistence Engine:} An ACID-compliant relational memory model decoupling ephemeral conversational logs (\texttt{messages}) from persistent architectural facts (\texttt{project\_memories}) with upsert semantics.
     \item \textbf{Codebase Context Retrieval Algorithm:} A deterministic path-relevance algorithm that injects relevant files, recent conversation, and the full project memory corpus into LLM prompts without expensive embedding overhead.
-    \item \textbf{Optimistic Concurrency Control:} Integer-based file versioning detecting edit collisions between developers and agents, returning standard HTTP 409 responses with conflict resolution payloads.
-    \item \textbf{Forensic Analysis and Formalization:} Complete algorithmic definitions for context assembly and agent execution loops, validated against 17 integration test cases.
+    \item \textbf{Optimistic Concurrency Control (OCC):} Integer-based file versioning detecting edit collisions between developers and agents, returning standard HTTP 409 responses with conflict resolution payloads.
 \end{itemize}
 
 \section{Related Work}
+
+\subsection{Web-Based IDEs and Collaborative Environments}
+Cloud and Web IDEs (such as VS Code for Web, GitHub Codespaces, and Replit) have democratized zero-install software development. Real-time collaborative editing in traditional groupware relies on Operational Transformation (OT) \cite{ellis1989ot} or Conflict-Free Replicated Data Types (CRDTs) \cite{oster2006crdt}. While systems like VS Code Live Share operate at the individual keystroke layer, Summit implements file-level optimistic concurrency control tailored specifically to hybrid human-agent co-authoring workflows.
 
 \subsection{AI Coding Assistants and Autonomous Agents}
 Modern AI developer tools have progressed from line-level completion to autonomous multi-step agents. GitHub Copilot \cite{copilot} and CodeWhisperer \cite{codewhisperer} rely strictly on active in-editor buffers. SWE-agent \cite{yang2024sweagent} introduced Agent-Computer Interfaces (ACI) for resolving real-world GitHub issues \cite{jimenez2024swebench}. Devin \cite{devin2024} and OpenDevin \cite{wang2024opendevin} demonstrated end-to-end task execution in sandboxed shells, while CodeAct \cite{wang2024codeact} pioneered executable Python actions. However, these systems operate in single-tenant, non-persistent environments.
@@ -74,25 +77,56 @@ Modern AI developer tools have progressed from line-level completion to autonomo
 \subsection{Memory in LLM Architectures}
 Zhong et al. \cite{zhang2024memorysurvey} categorize agent memory into working, episodic, semantic, and procedural components. Standard RAG architectures \cite{lewis2020rag, shrivastava2023rlcg, zhang2023repocoder} retrieve snippets using dense vector embeddings over static repositories. In contrast, Summit adopts structured, human-interpretable relational memory authored dynamically by both developers and agents, ensuring full injection determinism.
 
-\subsection{Collaborative Development Environments}
-Real-time collaborative editing is typically governed by Operational Transformation (OT) \cite{ellis1989ot} or Conflict-Free Replicated Data Types (CRDTs) \cite{oster2006crdt}. While systems like VS Code Live Share operate at the keystroke layer, Summit implements file-level optimistic concurrency control tailored to human-agent co-authoring.
+\begin{table*}[t]
+\caption{Comparative Architectural Matrix: Summit vs. Existing AI Coding Systems and Collaborative IDEs}
+\label{tab:comparison}
+\centering
+\scriptsize
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Capability / Feature} & \textbf{GitHub Copilot} \cite{copilot} & \textbf{SWE-agent} \cite{yang2024sweagent} & \textbf{Devin / OpenDevin} \cite{devin2024, wang2024opendevin} & \textbf{VS Code Live Share} & \textbf{Replit AI} & \textbf{Summit (Ours)} \\
+\midrule
+Browser-Native Web IDE & ❌ & ❌ & ⚠️ (Basic Viewer) & ❌ & ✅ & \textbf{✅ (Monaco + Xterm)} \\
+Multiplayer Collaboration Room & ❌ & ❌ & ❌ & ✅ & ⚠️ (Separate Agents) & \textbf{✅ (Shared Room)} \\
+Real-Time Telemetry Broadcast & ❌ & ❌ & ❌ & ❌ & ❌ & \textbf{✅ (15 WS Events)} \\
+Cross-Session Project Memory & ❌ & ❌ & ❌ & ❌ & ⚠️ (Ephemeral) & \textbf{✅ (SQLite Relational)} \\
+Optimistic Concurrency Control & ❌ & ❌ & ❌ & ⚠️ (OT/P2P) & ⚠️ (OT Lock) & \textbf{✅ (OCC HTTP 409)} \\
+Autonomous Multi-Tool Agent Loop & ❌ & ✅ & ✅ & ❌ & ⚠️ (Assisted) & \textbf{✅ (5 Core Tools)} \\
+Integrated Terminal Shell (Xterm.js) & ❌ & ❌ & ⚠️ (Container Log) & ⚠️ (Shared Host) & ✅ & \textbf{✅ (Bidirectional PTY)} \\
+Live Sandboxed Web App Preview & ❌ & ❌ & ⚠️ (Port Forward) & ⚠️ (Shared Port) & ✅ & \textbf{✅ (Dynamic Iframe)} \\
+Multi-LLM Routing & ❌ & ❌ & ⚠️ (Single Config) & ❌ & ❌ & \textbf{✅ (LiteLLM Multi-Key)} \\
+Deterministic Context Retrieval & ❌ & ❌ & ❌ & ❌ & ❌ & \textbf{✅ (Path Relevance)} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{System Architecture and Methodology}
+
+\subsection{Full-Stack Architecture Overview}
+As illustrated in Fig.~\ref{fig:arch}, Summit is engineered as a decoupled, multi-tier system. The backend is implemented in asynchronous Python (FastAPI/Uvicorn), and the frontend is a single-page React 19/TypeScript application hosting the Web IDE components.
 
 \begin{figure}[t]
 \centering
 \fbox{
 \begin{minipage}{0.92\linewidth}
 \scriptsize
-\textbf{Client Tier (React 19 / TypeScript / Monaco Editor / Xterm)}
+\textbf{Client Tier: Browser-Native Web IDE}
+\begin{itemize}
+    \item \textbf{CodeEditor:} Monaco Editor Syntax Core, Version Badges, Diff View
+    \item \textbf{Terminal:} Xterm.js Subsystem with Fit \& WebLinks Addons
+    \item \textbf{Live Preview:} Sandboxed Iframe Rendering Dynamic Web Artifacts
+    \item \textbf{Collaboration:} ProjectHeader User Avatars, Agent Control Drawer
+\end{itemize}
 \begin{center}
-$\updownarrow$ \textit{HTTP REST (CRUD \& Git) + WebSocket (Real-Time Streams)}
+$\updownarrow$ \textit{HTTP REST (CRUD, Git, Terminal) + WebSocket (Real-Time Streams)}
 \end{center}
 \textbf{FastAPI Application Server (Uvicorn ASGI)}
 \begin{itemize}
-    \item \textbf{API Routing Layer:} 9 Routers (Projects, Files, Agent, Git, WS, Auth)
+    \item \textbf{API Routing Layer:} 9 Routers (Projects, Files, Agent, Git, WS, Terminal)
     \item \textbf{Agent Engine (SummitAdapter):} LiteLLM Multi-Provider Dispatcher
     \item \textbf{SessionManager:} In-Memory WS Room Registry \& Lifecycle Events
     \item \textbf{ContextRetriever:} Path-Relevance Scoring \& Prompt Assembler
-    \item \textbf{WorkspaceManager:} Sandboxed Filesystem Access \& Conflict Check
+    \item \textbf{WorkspaceManager:} Sandboxed Filesystem Access \& OCC Conflict Check
     \item \textbf{GitService:} Subprocess-Driven Local Checkpoints \& Remote Sync
 \end{itemize}
 \begin{center}
@@ -104,14 +138,18 @@ $\updownarrow$ \textit{Direct SQLite Connection Pool (Zero ORM Overhead)}
 \end{itemize}
 \end{minipage}
 }
-\caption{Summit Full-Stack Multiplayer Architecture.}
+\caption{Summit Full-Stack Multiplayer Web IDE Architecture.}
 \label{fig:arch}
 \end{figure}
 
-\section{System Design and Methodology}
-
-\subsection{Architecture Overview}
-As depicted in Fig.~\ref{fig:arch}, Summit is designed as a decoupled, multi-tier system. The backend is implemented in asynchronous Python (FastAPI/Uvicorn), and the client is a single-page React 19 application featuring Monaco Editor, interactive memory drawers, and an integrated terminal.
+\subsection{Browser-Native Web IDE Subsystem}
+The Web IDE provides a developer environment directly in the browser through four integrated components:
+\begin{enumerate}
+    \item \textbf{Monaco Editor Core:} Embeds Microsoft's Monaco Editor (`@monaco-editor/react`), supporting language services, multi-cursor editing, and syntax highlighting for Python, TypeScript, JavaScript, HTML, CSS, JSON, and Markdown. It tracks dirty states and triggers optimistic saves.
+    \item \textbf{Integrated Terminal (Xterm.js):} Implements an interactive terminal subsystem (`@xterm/xterm`) enhanced with `@xterm/addon-fit` and `@xterm/addon-web-links`. The terminal issues asynchronous subprocess execution requests to `/api/projects/{id}/terminal/execute`, streaming standard output, standard error, and exit codes in real time.
+    \item \textbf{Live Web Preview Engine:} A sandboxed iframe component connected to the backend preview router (`/api/projects/{id}/preview/`). It enables immediate rendering of HTML/CSS/JavaScript applications created or modified by developers or the autonomous agent.
+    \item \textbf{Visual Conflict Resolution Interface:} Upon receiving an HTTP 409 status, the Web IDE launches a modal displaying a side-by-side diff between the server's current version and the developer's buffer, enabling one-click resolution (Adopt Server vs. Force Overwrite).
+\end{enumerate}
 
 \subsection{Multiplayer WebSocket Room Synchronization}
 Project-level concurrency is governed by the \texttt{SessionManager}. Active connections are stored in an in-memory dictionary:
@@ -135,7 +173,7 @@ Summit establishes two distinct persistence vectors within SQLite:
     \begin{equation}
     \mathcal{M}_{\text{proj}} = \{ (c_k, k, v_k) \mid k \in \mathcal{K} \}
     \end{equation}
-    where $c_k \in \{\text{architecture}, \text{decision}, \text{convention}, \text{task}\}$, enforce by a unique constraint $\text{UNIQUE}(project\_id, key)$ executing upsert operations:
+    where $c_k \in \{\text{architecture}, \text{decision}, \text{convention}, \text{task}\}$, enforced by a unique constraint $\text{UNIQUE}(project\_id, key)$ executing upsert operations:
     \begin{equation}
     \text{INSERT} \dots \text{ON CONFLICT}(project\_id, key) \text{ DO UPDATE SET } v = v_{\text{new}}
     \end{equation}
@@ -204,34 +242,12 @@ The persistence layer comprises six tables:
     \item \texttt{git\_checkpoints} (\underline{id}, project\_id, commit\_hash, message, created\_at)
 \end{itemize}
 
-\begin{table}[t]
-\caption{System Subsystems and Claim Traceability Matrix}
-\label{tab:traceability}
-\centering
-\scriptsize
-\begin{tabular}{lllp{2.5cm}}
-\toprule
-\textbf{Subsystem} & \textbf{Module File} & \textbf{Component / Function} & \textbf{Status} \\
-\midrule
-Multiplayer WS Room & \texttt{api/ws.py} & \texttt{agent\_event\_stream} & Verified Passing \\
-Session State & \texttt{agent/session\_manager.py} & \texttt{SessionManager} & Verified Passing \\
-Conversation Store & \texttt{database/repository.py} & \texttt{save\_message} & Verified Passing \\
-Project Memory & \texttt{database/repository.py} & \texttt{save\_memory (upsert)} & Verified Passing \\
-Context Assembler & \texttt{context/retriever.py} & \texttt{build\_context} & Verified Passing \\
-Concurrency Engine & \texttt{workspace/manager.py} & \texttt{write\_file (OCC)} & Verified Passing \\
-Tool Dispatcher & \texttt{agent/summit\_adapter.py} & \texttt{\_execute\_real\_llm\_agent} & Verified Passing \\
-Git Checkpointing & \texttt{git/git\_service.py} & \texttt{create\_checkpoint} & Verified Passing \\
-Path Sandboxing & \texttt{workspace/manager.py} & \texttt{validate\_safe\_path} & Verified Passing \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \section{Verification and Benchmark Methodology}
 
 \subsection{Functional Test Suite}
 The system implementation was verified using a 17-test functional and integration test suite across four test suites:
 \begin{itemize}
-    \item \texttt{test\_api.py} (4 tests): Verifies project CRUD lifecycles, file endpoints, and agent health APIs.
+    \item \texttt{test\_api.py} (4 tests): Verifies project CRUD lifecycles, file endpoints, terminal execution, and agent health APIs.
     \item \texttt{test\_event\_normalizer.py} (4 tests): Validates Pydantic schema serialization across 15 WebSocket event types.
     \item \texttt{test\_multiplayer\_memory.py} (5 tests): Confirms SQLite memory upserts, OCC version collision rejection (HTTP 409), and Git checkpoint integrity.
     \item \texttt{test\_workspace.py} (4 tests): Enforces workspace path traversal isolation (e.g., blocking \texttt{../../etc/passwd}) and directory tree listings.
@@ -253,11 +269,11 @@ While Summit provides a fully operational multiplayer AI programming platform, s
 \begin{enumerate}
     \item \textbf{Semantic Memory Pruning:} Summit currently injects all stored memories into prompt sections without token budgeting. Integrating vector embedding stores (e.g., ChromaDB) with semantic similarity filtering will prevent context window overflow.
     \item \textbf{Keystroke-Level CRDT Editing:} Upgrading file-level OCC to fine-grained Conflict-Free Replicated Data Types (CRDTs) will enable simultaneous in-line typing between developers and the agent.
-    \item \textbf{Sandboxed Code Execution:} Incorporating microVMs or Docker containers will protect host operating systems from untrusted agent shell commands.
+    \item \textbf{Sandboxed Container Execution:} Incorporating microVMs or Docker containers will protect host operating systems from untrusted agent shell commands.
 \end{enumerate}
 
 \section{Conclusion}
-This paper presented Summit, a multiplayer AI coding agent workspace with persistent project memory. By combining real-time WebSocket room multiplexing, dual-tier SQLite memory persistence, deterministic context retrieval, and optimistic concurrency control, Summit overcomes the isolation and statelessness of current AI developer tools. Forensic source verification and functional test suites confirm architectural viability, laying the groundwork for collaborative human-AI team engineering.
+This paper presented \textbf{Summit}, a collaborative multiplayer Web IDE and AI coding agent with persistent project memory. By combining browser-native editing (Monaco, Xterm.js, Live Preview), real-time WebSocket room multiplexing, dual-tier SQLite memory persistence, deterministic context retrieval, and optimistic concurrency control, Summit overcomes the isolation and statelessness of current AI developer tools. Forensic source verification, comparative analysis, and functional test suites confirm architectural viability, laying the groundwork for collaborative human-AI team engineering.
 
 \begin{thebibliography}{00}
 
