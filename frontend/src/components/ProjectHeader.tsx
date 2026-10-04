@@ -142,7 +142,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       fontSize: '12px',
       zIndex: 10,
       backdropFilter: 'blur(20px)',
-      WebkitAppRegion: 'drag' as any
+      ...({ WebkitAppRegion: 'drag' } as React.CSSProperties)
     }}>
       {/* Left: VSCodium Logo & Main Menu */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
