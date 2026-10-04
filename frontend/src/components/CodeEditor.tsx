@@ -67,13 +67,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   const getFileIcon = (path: string) => {
-    if (path.endsWith('.py')) return <FileCode size={13} color="#3776ab" />;
+    if (path.endsWith('.py')) return <FileCode size={13} color="#38bdf8" />;
     if (path.endsWith('.ts') || path.endsWith('.tsx')) return <FileCode size={13} color="#3178c6" />;
-    if (path.endsWith('.js') || path.endsWith('.jsx')) return <FileCode size={13} color="#f7df1e" />;
-    if (path.endsWith('.html')) return <FileCode size={13} color="#e34f26" />;
-    if (path.endsWith('.css')) return <FileCode size={13} color="#42a5f5" />;
-    if (path.endsWith('.json')) return <FileJson size={13} color="#cbcb41" />;
-    return <FileText size={13} color="var(--vscode-text-muted)" />;
+    if (path.endsWith('.js') || path.endsWith('.jsx')) return <FileCode size={13} color="#facc15" />;
+    if (path.endsWith('.html')) return <FileCode size={13} color="#f97316" />;
+    if (path.endsWith('.css')) return <FileCode size={13} color="#38bdf8" />;
+    if (path.endsWith('.json')) return <FileJson size={13} color="#fbbf24" />;
+    if (path.endsWith('.md')) return <FileText size={13} color="#60a5fa" />;
+    return <FileText size={13} color="#94a3b8" />;
   };
 
   const handleSave = () => {

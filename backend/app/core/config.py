@@ -31,8 +31,9 @@ class Settings(BaseSettings):
     PORT: int = 8000
     DEBUG: bool = True
 
-    # Summit Workspace Settings
+    # Summit Workspace & Database Settings
     SUMMIT_WORKSPACE_ROOT: str = "./workspaces"
+    DATABASE_URL: str = "sqlite:///./data/summit.db"
 
     # LLM / AI Provider Settings
     AI_MODEL: Optional[str] = None
@@ -47,6 +48,12 @@ class Settings(BaseSettings):
     # Chroma Vector DB Settings
     CHROMA_PERSIST_DIR: str = "./data/chroma"
     CHROMA_COLLECTION_NAME: str = "summit_memories"
+
+    # Context Intelligence Settings
+    MAX_CONTEXT_FILES: int = 10
+    MAX_FILE_SIZE: int = 100000
+    CONVERSATION_CONTEXT_LIMIT: int = 10
+    MAX_CONTEXT_CHARS: int = 40000
 
     # App Settings
     APP_NAME: str = "Summit AI Coding Workspace"

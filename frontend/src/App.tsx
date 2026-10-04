@@ -21,6 +21,7 @@ import { AgentPanel } from './components/AgentPanel';
 import { MemoryPanel } from './components/MemoryPanel';
 import { GitPanel } from './components/GitPanel';
 import { ConflictModal } from './components/ConflictModal';
+import { IntegratedTerminal } from './components/terminal/IntegratedTerminal';
 import { signOutUser, subscribeToAuthState } from './services/firebase';
 
 export const App: React.FC = () => {
@@ -407,7 +408,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--vscode-bg-editor)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--vscode-bg-editor)', borderRadius: '0px', overflow: 'hidden' }}>
       {/* VSCodium Titlebar Header */}
       <ProjectHeader
         projects={projects}
@@ -459,14 +460,8 @@ export const App: React.FC = () => {
             hasIndexHtml={files.some((f) => f.name === 'index.html' || f.path.endsWith('index.html'))}
           />
 
-          {/* Bottom Status Bar */}
-          <GitPanel
-            projectId={currentProject?.id || ''}
-            status={gitStatus}
-            onFetchDiff={handleFetchGitDiff}
-            diffContent={gitDiff}
-            onRefreshStatus={() => currentProject && api.fetchGitStatus(currentProject.id).then(setGitStatus)}
-          />
+          {/* Integrated Terminal */}
+          <IntegratedTerminal projectId={currentProject?.id || ''} />
         </div>
 
         {/* Right: AI Assistant & Events Panel */}
@@ -482,6 +477,15 @@ export const App: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Bottom Status Bar */}
+      <GitPanel
+        projectId={currentProject?.id || ''}
+        status={gitStatus}
+        onFetchDiff={handleFetchGitDiff}
+        diffContent={gitDiff}
+        onRefreshStatus={() => currentProject && api.fetchGitStatus(currentProject.id).then(setGitStatus)}
+      />
 
       {/* Concurrent Editing Conflict Resolution Modal */}
       <ConflictModal

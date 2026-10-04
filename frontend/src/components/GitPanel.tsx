@@ -147,11 +147,11 @@ export const GitPanel: React.FC<GitPanelProps> = ({
             padding: '0 0.5rem',
             height: '100%',
             cursor: 'pointer',
-            backgroundColor: 'rgba(255,255,255,0.1)'
+            backgroundColor: 'rgba(255,255,255,0.06)'
           }}
           title="Git Branch"
         >
-          <GitBranch size={12} />
+          <GitBranch size={12} color="#fb923c" />
           <span style={{ fontWeight: 600 }}>{status?.branch || branch || 'main'}</span>
         </div>
 
@@ -172,12 +172,12 @@ export const GitPanel: React.FC<GitPanelProps> = ({
           title="View Git Working Directory Diff"
         >
           {status?.is_clean ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-              <Check size={11} /> Clean
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: '#4ade80' }}>
+              <Check size={11} color="#4ade80" /> Clean
             </span>
           ) : (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-              <FileDiff size={11} /> {status?.modified.length || 0} modified
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: '#fbbf24' }}>
+              <FileDiff size={11} color="#fbbf24" /> {status?.modified.length || 0} modified
             </span>
           )}
         </div>
@@ -191,12 +191,12 @@ export const GitPanel: React.FC<GitPanelProps> = ({
             padding: '0 0.5rem',
             height: '100%',
             cursor: 'pointer',
-            borderLeft: '1px solid rgba(255,255,255,0.15)'
+            borderLeft: '1px solid rgba(255,255,255,0.1)'
           }}
           onClick={() => setShowGithubModal(true)}
           title={hasRemote ? `Connected to GitHub: ${currentRemote}` : 'Click to connect a GitHub repository'}
         >
-          <GithubIcon size={12} />
+          <GithubIcon size={12} color="#ffffff" />
           <span>{hasRemote ? 'GitHub Connected' : 'Connect GitHub'}</span>
         </div>
       </div>
@@ -217,24 +217,24 @@ export const GitPanel: React.FC<GitPanelProps> = ({
             height: '100%',
             cursor: 'pointer',
             fontSize: '11px',
-            backgroundColor: 'rgba(255,255,255,0.08)'
+            backgroundColor: 'rgba(255,255,255,0.06)'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)'}
           title="Commit changes and push automatically to GitHub"
         >
-          <UploadCloud size={12} />
+          <UploadCloud size={12} color="#38bdf8" />
           <span style={{ fontWeight: 600 }}>Commit & Push</span>
         </button>
 
-        <div style={{ padding: '0 0.5rem', borderLeft: '1px solid rgba(255,255,255,0.2)' }}>
+        <div style={{ padding: '0 0.5rem', borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
           Spaces: 4
         </div>
         <div style={{ padding: '0 0.5rem' }}>
           UTF-8
         </div>
-        <div style={{ padding: '0 0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-          <Radio size={10} />
+        <div style={{ padding: '0 0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#4ade80' }}>
+          <Radio size={10} color="#4ade80" />
           <span>Live Sync</span>
         </div>
       </div>
@@ -260,11 +260,11 @@ export const GitPanel: React.FC<GitPanelProps> = ({
             {hasRemote ? (
               <div style={{
                 padding: '0.4rem 0.6rem',
-                backgroundColor: 'rgba(0, 122, 204, 0.1)',
-                border: '1px solid rgba(0, 122, 204, 0.3)',
-                borderRadius: '3px',
+                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '4px',
                 fontSize: '11px',
-                color: 'var(--vscode-accent-blue)',
+                color: 'var(--vscode-text-primary)',
                 marginBottom: '0.8rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -276,11 +276,11 @@ export const GitPanel: React.FC<GitPanelProps> = ({
             ) : (
               <div style={{
                 padding: '0.45rem 0.6rem',
-                backgroundColor: 'rgba(204, 167, 0, 0.12)',
-                border: '1px solid rgba(204, 167, 0, 0.3)',
-                borderRadius: '3px',
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px',
                 fontSize: '11px',
-                color: 'var(--vscode-accent-yellow)',
+                color: 'var(--vscode-text-secondary)',
                 marginBottom: '0.8rem',
                 display: 'flex',
                 alignItems: 'center',

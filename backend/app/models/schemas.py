@@ -218,3 +218,23 @@ class AppEvent(BaseModel):
     type: AppEventType
     timestamp: datetime = Field(default_factory=now_utc)
     data: Dict[str, Any] = Field(default_factory=dict)
+
+
+# --- Context Intelligence Schemas ---
+class RelevantFileContext(BaseModel):
+    path: str
+    content: str
+    relevance_score: float = 1.0
+    size: int = 0
+    language: Optional[str] = None
+
+
+class AgentContextPayload(BaseModel):
+    project_id: str
+    project_summary: Optional[str] = None
+    current_request: str
+    memories: List[ProjectMemoryItem] = []
+    project_tree: Optional[str] = None
+    relevant_files: List[RelevantFileContext] = []
+    recent_messages: List[MessageRecord] = []
+    formatted_prompt: str

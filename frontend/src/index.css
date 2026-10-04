@@ -1,71 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  /* VSCodium Authentic Dark Theme Palette */
-  --vscode-bg-editor: #1e1e1e;
-  --vscode-bg-sidebar: #252526;
-  --vscode-bg-activitybar: #181818;
-  --vscode-bg-topbar: #1f1f1f;
-  --vscode-bg-statusbar: #007acc;
-  --vscode-bg-statusbar-offline: #68217a;
-  --vscode-bg-panel: #1e1e1e;
-  --vscode-bg-panel-header: #252526;
+  /* macOS-Inspired Monochromatic Black & Grey Theme Palette */
+  --vscode-bg-editor: #0c0c0e;
+  --vscode-bg-sidebar: #121215;
+  --vscode-bg-activitybar: #09090b;
+  --vscode-bg-topbar: #121215;
+  --vscode-bg-statusbar: #121215;
+  --vscode-bg-statusbar-offline: #18181b;
+  --vscode-bg-panel: #141417;
+  --vscode-bg-panel-header: #141417;
   
-  --vscode-bg-tab-active: #1e1e1e;
-  --vscode-bg-tab-inactive: #2d2d2d;
-  --vscode-bg-tab-hover: #323232;
+  --vscode-bg-tab-active: #18181b;
+  --vscode-bg-tab-inactive: #09090b;
+  --vscode-bg-tab-hover: #18181b;
   
-  --vscode-bg-card: #252526;
-  --vscode-bg-card-hover: #2a2d2e;
-  --vscode-bg-card-active: #094771;
+  --vscode-bg-card: #18181b;
+  --vscode-bg-card-hover: #222226;
+  --vscode-bg-card-active: #27272a;
   
-  --vscode-bg-input: #3c3c3c;
-  --vscode-bg-input-focus: #3c3c3c;
-  --vscode-bg-terminal: #181818;
+  --vscode-bg-input: #121215;
+  --vscode-bg-input-focus: #1c1c20;
+  --vscode-bg-terminal: #09090b;
   
-  /* Borders */
-  --vscode-border: #333333;
-  --vscode-border-light: #3c3c3c;
-  --vscode-border-focus: #007acc;
-  --vscode-border-active: #007acc;
+  /* Borders — Clean subtle grey lines */
+  --vscode-border: rgba(255, 255, 255, 0.08);
+  --vscode-border-light: rgba(255, 255, 255, 0.12);
+  --vscode-border-focus: #52525b;
+  --vscode-border-active: #71717a;
   
   /* Text */
-  --vscode-text-primary: #cccccc;
-  --vscode-text-secondary: #969696;
-  --vscode-text-muted: #6e6e6e;
-  --vscode-text-link: #3794ff;
+  --vscode-text-primary: #f4f4f5;
+  --vscode-text-secondary: #a1a1aa;
+  --vscode-text-muted: #71717a;
+  --vscode-text-link: #e4e4e7;
   --vscode-text-white: #ffffff;
   
-  /* Accents */
-  --vscode-accent: #007acc;
-  --vscode-accent-hover: #0098ff;
-  --vscode-accent-cyan: #4ec9b0;
-  --vscode-accent-blue: #569cd6;
-  --vscode-accent-purple: #c586c0;
-  --vscode-accent-yellow: #dcdcaa;
-  --vscode-accent-orange: #ce9178;
-  --vscode-accent-green: #6a9955;
-  --vscode-accent-red: #f14c4c;
-  --vscode-accent-amber: #cca700;
+  /* Accents — Pure monochrome shades */
+  --vscode-accent: #e4e4e7;
+  --vscode-accent-hover: #ffffff;
+  --vscode-accent-cyan: #d4d4d8;
+  --vscode-accent-blue: #e4e4e7;
+  --vscode-accent-purple: #d4d4d8;
+  --vscode-accent-yellow: #e4e4e7;
+  --vscode-accent-orange: #d4d4d8;
+  --vscode-accent-green: #e4e4e7;
+  --vscode-accent-red: #a1a1aa;
+  --vscode-accent-amber: #d4d4d8;
 
-  /* Legacy variables mapped to VSCodium */
-  --bg-dark: #1e1e1e;
-  --bg-panel: #252526;
-  --bg-card: #2a2d2e;
-  --border-color: #333333;
-  --border-bright: #3c3c3c;
-  --text-main: #cccccc;
-  --text-muted: #969696;
-  --text-dim: #6e6e6e;
-  --accent-blue: #007acc;
-  --accent-green: #4ec9b0;
-  --accent-purple: #c586c0;
-  --accent-amber: #dcdcaa;
-  --accent-red: #f14c4c;
+  /* Legacy variables mapped */
+  --bg-dark: #09090b;
+  --bg-panel: #141417;
+  --bg-card: #18181b;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(255, 255, 255, 0.14);
+  --text-main: #f4f4f5;
+  --text-muted: #71717a;
+  --text-dim: #52525b;
+  --accent-blue: #e4e4e7;
+  --accent-green: #e4e4e7;
+  --accent-purple: #d4d4d8;
+  --accent-amber: #d4d4d8;
+  --accent-red: #a1a1aa;
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, 'Courier New', monospace;
 }
 
 * {
@@ -81,6 +81,7 @@ body {
   height: 100vh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   font-size: 13px;
   user-select: none;
 }
@@ -91,63 +92,68 @@ body {
   flex-direction: column;
 }
 
-/* VSCodium Scrollbars */
+/* macOS-style Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(121, 121, 121, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.7);
+  background: rgba(255, 255, 255, 0.22);
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* Buttons */
+/* Buttons — Rounded, monochromatic, sleek */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 2px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: var(--font-sans);
   line-height: 1.2;
 }
 
 .btn-primary {
-  background-color: var(--vscode-accent);
-  color: #ffffff;
-  border: 1px solid var(--vscode-accent);
+  background: #f4f4f5;
+  color: #09090b;
+  border: 1px solid #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--vscode-accent-hover);
-  border-color: var(--vscode-accent-hover);
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 .btn-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.35;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-secondary {
-  background-color: #333333;
+  background-color: #18181b;
   color: var(--vscode-text-primary);
-  border-color: #3c3c3c;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 .btn-secondary:hover:not(:disabled) {
-  background-color: #3e3e3e;
-  border-color: #4c4c4c;
+  background-color: #27272a;
+  border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
 
@@ -155,42 +161,45 @@ body {
   background: transparent;
   border: none;
   color: var(--vscode-text-secondary);
-  padding: 4px 6px;
-  border-radius: 3px;
+  padding: 5px 7px;
+  border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-icon:hover {
   background-color: rgba(255, 255, 255, 0.08);
   color: var(--vscode-text-white);
+  transform: scale(1.05);
 }
 
 .btn-danger {
-  background-color: rgba(241, 76, 76, 0.2);
-  color: var(--vscode-accent-red);
-  border-color: rgba(241, 76, 76, 0.4);
+  background-color: #27272a;
+  color: #f4f4f5;
+  border-color: rgba(255, 255, 255, 0.15);
 }
 .btn-danger:hover {
-  background-color: rgba(241, 76, 76, 0.35);
-  border-color: var(--vscode-accent-red);
+  background-color: #3f3f46;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Inputs & Selects */
+/* Inputs & Selects — Rounded, monochrome focus */
 .input {
   background-color: var(--vscode-bg-input);
-  border: 1px solid var(--vscode-border-light);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--vscode-text-primary);
-  padding: 0.35rem 0.6rem;
-  border-radius: 2px;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
   font-size: 12px;
   outline: none;
   font-family: var(--font-sans);
-  transition: border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .input:focus {
-  border-color: var(--vscode-border-focus);
+  border-color: #71717a;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 .input::placeholder {
   color: var(--vscode-text-muted);
@@ -200,42 +209,61 @@ select.input {
   cursor: pointer;
 }
 
-/* Badges */
+/* Badges — Pill-shaped with status colors */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 2px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
-.badge-idle { background: rgba(110, 110, 110, 0.2); color: #969696; border: 1px solid #333; }
-.badge-thinking { background: rgba(204, 167, 0, 0.2); color: #dcdcaa; border: 1px solid rgba(204, 167, 0, 0.4); }
-.badge-executing { background: rgba(0, 122, 204, 0.2); color: #569cd6; border: 1px solid rgba(0, 122, 204, 0.4); }
-.badge-completed { background: rgba(78, 201, 176, 0.2); color: #4ec9b0; border: 1px solid rgba(78, 201, 176, 0.4); }
-.badge-error { background: rgba(241, 76, 76, 0.2); color: #f14c4c; border: 1px solid rgba(241, 76, 76, 0.4); }
-.badge-paused { background: rgba(197, 134, 192, 0.2); color: #c586c0; border: 1px solid rgba(197, 134, 192, 0.4); }
+.badge-idle { background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.25); }
+.badge-thinking { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+.badge-executing { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge-completed { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+.badge-error { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+.badge-paused { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
 
-/* Modals */
+/* Animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Modals — macOS Sheet */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
+  animation: fadeInOverlay 0.15s ease;
+}
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .modal-box {
-  background-color: var(--vscode-bg-sidebar);
-  border: 1px solid var(--vscode-border-light);
-  border-radius: 4px;
+  background-color: #121215;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
   width: 90%;
   max-width: 580px;
   padding: 1.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+  animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }

@@ -202,3 +202,20 @@ export async function pauseAgent(projectId: string): Promise<void> {
 export async function resumeAgent(projectId: string): Promise<void> {
   await fetch(`${API_BASE}/projects/${projectId}/agent/resume`, { method: 'POST' });
 }
+
+export async function executeTerminalCommand(
+  projectId: string,
+  command: string,
+  cwd?: string
+): Promise<{ command: string; output: string; exit_code: number; cwd: string }> {
+  const res = await fetch(`${API_BASE}/projects/${projectId}/terminal/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command, cwd })
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || 'Terminal execution failed');
+  }
+  return res.json();
+}

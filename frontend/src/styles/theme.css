@@ -1,66 +1,103 @@
 :root {
-  /* VS Code Dark Modern Colors */
-  --bg-app: #0d1117;
-  --bg-topbar: #090d13;
-  --bg-sidebar: #161b22;
-  --bg-editor: #0d1117;
-  --bg-panel: #161b22;
-  --bg-activity-bar: #090d13;
-  --bg-statusbar: #1f242c;
-  --bg-tabs: #090d13;
-  --bg-tab-active: #0d1117;
-  --bg-tab-inactive: #090d13;
-  --bg-tab-hover: #161b22;
-  --bg-card: #161b22;
-  --bg-card-hover: #1f242c;
-  --bg-input: #090d13;
-  --bg-input-focus: #161b22;
-  --bg-hover: rgba(255, 255, 255, 0.06);
-  --bg-badge: #21262d;
-  --bg-terminal: #090d13;
+  /* ============================================================
+     macOS-Inspired Dark Theme — Summit Studio
+     Deep Black & Charcoal UI Chrome with Vibrant Icons & Status Accents
+     ============================================================ */
 
-  /* Borders */
-  --border-subtle: #21262d;
-  --border-default: #30363d;
-  --border-focus: #58a6ff;
-  --border-active: #6366f1;
+  /* Core Backgrounds — Sleek Black & Grey Surfaces */
+  --bg-app: #09090b;
+  --bg-topbar: #121215;
+  --bg-sidebar: #121215;
+  --bg-editor: #0c0c0e;
+  --bg-panel: #141417;
+  --bg-activity-bar: #09090b;
+  --bg-statusbar: #121215;
+  --bg-tabs: #09090b;
+  --bg-tab-active: #18181b;
+  --bg-tab-inactive: #09090b;
+  --bg-tab-hover: #18181b;
+  --bg-card: #18181b;
+  --bg-card-hover: #222226;
+  --bg-input: #121215;
+  --bg-input-focus: #1c1c20;
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-badge: #27272a;
+  --bg-terminal: #09090b;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(18, 18, 21, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-blur: blur(20px);
+
+  /* Borders — Clean subtle grey lines */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-focus: #52525b;
+  --border-active: #71717a;
 
   /* Text & Foreground */
-  --text-primary: #f0f6fc;
-  --text-secondary: #c9d1d9;
-  --text-muted: #8b949e;
-  --text-disabled: #484f58;
-  --text-link: #58a6ff;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-disabled: #3f3f46;
+  --text-link: #60a5fa;
 
-  /* Accent & Status Colors */
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #4f46e5;
-  --accent-cyan: #06b6d4;
-  --accent-blue: #38bdf8;
-  --accent-green: #238636;
-  --accent-green-bright: #3fb950;
-  --accent-amber: #d29922;
-  --accent-rose: #f85149;
-  --accent-purple: #bc8cff;
+  /* Vibrant Accents & Icon Colors */
+  --accent-primary: #60a5fa;
+  --accent-primary-hover: #3b82f6;
+  --accent-primary-glow: rgba(96, 165, 250, 0.25);
+  --accent-cyan: #22d3ee;
+  --accent-blue: #60a5fa;
+  --accent-green: #34d399;
+  --accent-green-bright: #4ade80;
+  --accent-amber: #fbbf24;
+  --accent-yellow: #facc15;
+  --accent-orange: #fb923c;
+  --accent-rose: #fb7185;
+  --accent-purple: #a855f7;
+  --accent-pink: #f472b6;
+  --accent-indigo: #818cf8;
 
   /* Status Colors */
-  --status-ready: #3fb950;
-  --status-thinking: #bc8cff;
+  --status-ready: #4ade80;
+  --status-thinking: #a855f7;
   --status-executing: #38bdf8;
-  --status-error: #f85149;
-  --status-stopped: #8b949e;
+  --status-error: #f87171;
+  --status-stopped: #71717a;
 
   /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, 'Courier New', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Monaco, Consolas, 'Courier New', monospace;
 
   /* Sizing & Layout */
-  --topbar-height: 40px;
-  --statusbar-height: 24px;
-  --activity-bar-width: 48px;
-  --sidebar-width: 250px;
-  --ai-panel-width: 360px;
-  --tab-height: 35px;
-  --tabs-height: 35px;
-  --bottom-panel-height: 220px;
+  --topbar-height: 44px;
+  --statusbar-height: 26px;
+  --activity-bar-width: 50px;
+  --sidebar-width: 260px;
+  --ai-panel-width: 380px;
+  --tab-height: 38px;
+  --tabs-height: 38px;
+  --bottom-panel-height: 250px;
+
+  /* Radii — macOS-style rounded */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows — Layered depth */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.85);
+  --shadow-glow: 0 0 16px rgba(96, 165, 250, 0.15);
+  --shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  /* Transitions */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }

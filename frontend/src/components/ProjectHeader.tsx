@@ -84,7 +84,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     if (!inviteEmail.trim() || !currentProject) return;
 
     const email = inviteEmail.trim().toLowerCase();
-    
+
     // Avoid duplicate email
     if (invitedMembers.some((m) => m.email === email)) {
       setInviteSuccessMsg(`Teammate with email ${email} is already added.`);
@@ -101,7 +101,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     const updated = [newMember, ...invitedMembers];
     setInvitedMembers(updated);
     localStorage.setItem(`summit_teammates_${currentProject.id}`, JSON.stringify(updated));
-    
+
     setInviteEmail('');
     setInviteSuccessMsg(`Teammate ${email} added successfully with ${inviteRole} access.`);
     setTimeout(() => setInviteSuccessMsg(null), 3500);
@@ -132,15 +132,17 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   return (
     <header style={{
-      height: '38px',
-      backgroundColor: 'var(--vscode-bg-topbar)',
+      height: '44px',
+      background: 'var(--vscode-bg-topbar)',
       borderBottom: '1px solid var(--vscode-border)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 0.6rem',
+      padding: '0 0.85rem',
       fontSize: '12px',
-      zIndex: 10
+      zIndex: 10,
+      backdropFilter: 'blur(20px)',
+      WebkitAppRegion: 'drag' as any
     }}>
       {/* Left: VSCodium Logo & Main Menu */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -150,7 +152,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             onClick={onToggleExplorer}
             title={showExplorer ? 'Hide Primary Side Bar (Ctrl+B)' : 'Show Primary Side Bar (Ctrl+B)'}
             style={{
-              color: showExplorer ? 'var(--vscode-accent)' : 'var(--vscode-text-muted)',
+              color: showExplorer ? 'var(--vscode-text-primary)' : 'var(--vscode-text-muted)',
               padding: '3px 5px'
             }}
           >
@@ -158,27 +160,73 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </button>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--vscode-accent)' }}>
-          <Code2 size={16} />
-          <span style={{ fontWeight: 600, fontSize: '12px', color: 'var(--vscode-text-white)' }}>
-            Summit VSCodium
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {/* macOS Authentic Traffic Lights */}
+          <div style={{ display: 'flex', gap: '7px', marginRight: '6px' }}>
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #ff5f56 0%, #e0443e 100%)',
+              boxShadow: '0 1px 4px rgba(255, 95, 86, 0.55)',
+              border: '1px solid rgba(0, 0, 0, 0.2)',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease'
+            }}
+              title="Close"
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            />
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #ffbd2e 0%, #dea123 100%)',
+              boxShadow: '0 1px 4px rgba(255, 189, 46, 0.55)',
+              border: '1px solid rgba(0, 0, 0, 0.2)',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease'
+            }}
+              title="Minimize"
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            />
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #27c93f 0%, #1aab29 100%)',
+              boxShadow: '0 1px 4px rgba(39, 201, 63, 0.55)',
+              border: '1px solid rgba(0, 0, 0, 0.2)',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease'
+            }}
+              title="Maximize"
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            />
+          </div>
+          <Code2 size={16} color="#60a5fa" />
+          <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--vscode-text-white)', letterSpacing: '-0.01em' }}>
+            Summit Studio
           </span>
         </div>
 
         {/* VS Code Menu Items */}
-        <div style={{ display: 'flex', gap: '0.2rem', marginLeft: '0.25rem' }}>
+        <div style={{ display: 'flex', gap: '1px', marginLeft: '0.3rem' }}>
           {['File', 'Edit', 'Selection', 'View', 'Go', 'Terminal'].map((menu) => (
             <span
               key={menu}
               style={{
-                padding: '0.2rem 0.4rem',
+                padding: '0.25rem 0.55rem',
                 color: 'var(--vscode-text-secondary)',
                 cursor: 'pointer',
-                borderRadius: '3px',
-                fontSize: '11px'
+                borderRadius: '6px',
+                fontSize: '12px',
+                transition: 'all 0.15s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)';
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
                 e.currentTarget.style.color = '#ffffff';
               }}
               onMouseLeave={(e) => {
@@ -197,12 +245,14 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.4rem',
+          gap: '0.5rem',
           backgroundColor: 'var(--vscode-bg-input)',
           border: '1px solid var(--vscode-border-light)',
-          borderRadius: '4px',
-          padding: '0.2rem 0.6rem',
-          minWidth: '260px'
+          borderRadius: '10px',
+          padding: '0.3rem 0.75rem',
+          minWidth: '280px',
+          transition: 'all 0.2s ease',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
         }}>
           <FolderGit2 size={13} color="var(--vscode-accent)" />
           <select
@@ -242,7 +292,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         {/* Connected Multiplayer Developers */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <Users size={13} color="var(--vscode-accent-cyan)" />
+          <Users size={13} color="var(--vscode-text-secondary)" />
           <div style={{ display: 'flex', gap: '0.25rem' }}>
             {connectedUsers.map((u) => (
               <span
@@ -252,9 +302,9 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                   fontSize: '10px',
                   padding: '0.1rem 0.35rem',
                   borderRadius: '3px',
-                  backgroundColor: u.user_id === currentUser.userId ? 'rgba(0, 122, 204, 0.25)' : 'rgba(78, 201, 176, 0.15)',
-                  color: u.user_id === currentUser.userId ? 'var(--vscode-accent-blue)' : 'var(--vscode-accent-cyan)',
-                  border: '1px solid currentColor',
+                  backgroundColor: u.user_id === currentUser.userId ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)',
+                  color: u.user_id === currentUser.userId ? '#ffffff' : 'var(--vscode-text-secondary)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
                   fontWeight: 500
                 }}
               >
@@ -266,66 +316,97 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
         {/* Add Teammate Button */}
         <button
-          className="btn btn-secondary"
+          className="btn"
           onClick={() => setShowInviteModal(true)}
           title="Add Teammate by Email"
           style={{
-            padding: '0.2rem 0.5rem',
+            padding: '0.28rem 0.65rem',
             fontSize: '11px',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.35rem',
-            backgroundColor: 'rgba(0, 122, 204, 0.15)',
-            border: '1px solid rgba(0, 122, 204, 0.4)',
-            color: '#38a5ff',
-            fontWeight: 500
+            gap: '0.4rem',
+            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.28) 0%, rgba(59, 130, 246, 0.18) 100%)',
+            border: '1px solid rgba(96, 165, 250, 0.45)',
+            borderRadius: '6px',
+            color: '#93c5fd',
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 1px 4px rgba(37, 99, 235, 0.2)',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(37, 99, 235, 0.45) 0%, rgba(59, 130, 246, 0.35) 100%)';
+            e.currentTarget.style.borderColor = '#60a5fa';
+            e.currentTarget.style.color = '#ffffff';
+            e.currentTarget.style.boxShadow = '0 0 12px rgba(59, 130, 246, 0.35)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(37, 99, 235, 0.28) 0%, rgba(59, 130, 246, 0.18) 100%)';
+            e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.45)';
+            e.currentTarget.style.color = '#93c5fd';
+            e.currentTarget.style.boxShadow = '0 1px 4px rgba(37, 99, 235, 0.2)';
           }}
         >
-          <UserPlus size={12} />
+          <UserPlus size={13} color="#60a5fa" />
           <span>Add Teammate</span>
         </button>
 
-        {/* User Account / Profile Menu */}
+        {/* User Account / Profile Menu Button */}
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.35rem',
-              backgroundColor: 'rgba(255,255,255,0.06)',
-              border: '1px solid var(--vscode-border)',
-              padding: '0.2rem 0.5rem',
-              borderRadius: '3px',
-              color: 'var(--vscode-text-white)',
+              gap: '0.45rem',
+              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.35) 0%, rgba(37, 99, 235, 0.2) 100%)',
+              border: '1px solid rgba(96, 165, 250, 0.4)',
+              padding: '0.22rem 0.55rem',
+              borderRadius: '6px',
+              color: '#ffffff',
               cursor: 'pointer',
               fontSize: '11px',
-              fontWeight: 500
+              fontWeight: 500,
+              boxShadow: '0 1px 4px rgba(0, 0, 0, 0.3)',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(30, 58, 138, 0.5) 0%, rgba(37, 99, 235, 0.35) 100%)';
+              e.currentTarget.style.borderColor = '#60a5fa';
+              e.currentTarget.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(30, 58, 138, 0.35) 0%, rgba(37, 99, 235, 0.2) 100%)';
+              e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.4)';
+              e.currentTarget.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.3)';
             }}
           >
             {currentUser.photoURL ? (
               <img
                 src={currentUser.photoURL}
                 alt="Avatar"
-                style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }}
+                style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #60a5fa' }}
               />
             ) : (
               <div style={{
-                width: '16px',
-                height: '16px',
+                width: '18px',
+                height: '18px',
                 borderRadius: '50%',
-                backgroundColor: 'var(--vscode-accent)',
+                background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                border: '1px solid rgba(147, 197, 253, 0.5)',
+                color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '9px',
-                fontWeight: 700
+                fontSize: '10px',
+                fontWeight: 700,
+                boxShadow: '0 0 6px rgba(37, 99, 235, 0.5)'
               }}>
                 {currentUser.displayName.charAt(0).toUpperCase()}
               </div>
             )}
-            <span>{currentUser.displayName}</span>
-            <ChevronDown size={11} color="var(--vscode-text-muted)" />
+            <span style={{ color: '#e0f2fe', fontWeight: 600 }}>{currentUser.displayName}</span>
+            <ChevronDown size={11} color="#60a5fa" />
           </button>
 
           {/* User Dropdown */}

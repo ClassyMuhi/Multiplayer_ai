@@ -28,14 +28,14 @@ const PRESET_ACCOUNTS = [
     name: 'Alice Chen',
     role: 'Lead Fullstack Engineer',
     badge: 'Dev A',
-    color: '#007acc'
+    color: '#d4d4d8'
   },
   {
     id: 'user_b',
     name: 'Bob Miller',
     role: 'Backend Architect',
     badge: 'Dev B',
-    color: '#4ec9b0'
+    color: '#a1a1aa'
   }
 ];
 
@@ -204,11 +204,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               display: 'inline-flex',
               padding: '0.6rem',
               borderRadius: '8px',
-              backgroundColor: 'rgba(0, 122, 204, 0.15)',
-              border: '1px solid rgba(0, 122, 204, 0.3)',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
               marginBottom: '0.75rem'
             }}>
-              <Code2 size={24} color="#007acc" />
+              <Code2 size={24} color="#f4f4f5" />
             </div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--vscode-text-white)', marginBottom: '0.3rem' }}>
               Developer Sign In

@@ -44,15 +44,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const getFileIcon = (name: string) => {
-    if (name.endsWith('.py')) return <FileCode size={14} color="#3776ab" />;
+    if (name.endsWith('.py')) return <FileCode size={14} color="#38bdf8" />;
     if (name.endsWith('.ts') || name.endsWith('.tsx')) return <FileCode size={14} color="#3178c6" />;
-    if (name.endsWith('.js') || name.endsWith('.jsx')) return <FileCode size={14} color="#f7df1e" />;
-    if (name.endsWith('.html')) return <FileCode size={14} color="#e34f26" />;
-    if (name.endsWith('.css')) return <FileCode size={14} color="#42a5f5" />;
-    if (name.endsWith('.json')) return <FileJson size={14} color="#cbcb41" />;
-    if (name.endsWith('.md')) return <FileText size={14} color="#519aba" />;
-    if (name.endsWith('.ini') || name.endsWith('.env')) return <FileCheck size={14} color="#969696" />;
-    return <FileText size={14} color="var(--vscode-text-muted)" />;
+    if (name.endsWith('.js') || name.endsWith('.jsx')) return <FileCode size={14} color="#facc15" />;
+    if (name.endsWith('.html')) return <FileCode size={14} color="#f97316" />;
+    if (name.endsWith('.css')) return <FileCode size={14} color="#38bdf8" />;
+    if (name.endsWith('.json')) return <FileJson size={14} color="#fbbf24" />;
+    if (name.endsWith('.md')) return <FileText size={14} color="#60a5fa" />;
+    if (name.endsWith('.ini') || name.endsWith('.env')) return <FileCheck size={14} color="#a855f7" />;
+    return <FileText size={14} color="#94a3b8" />;
   };
 
   const renderTree = (nodes: FileNode[], depth = 0) => {
@@ -76,7 +76,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 cursor: 'pointer'
               }}
             >
-              <FolderOpen size={13} color="var(--vscode-accent-yellow)" />
+              <FolderOpen size={13} color="#f59e0b" />
               <span>{node.name}</span>
             </div>
             {node.children && renderTree(node.children, depth + 1)}
@@ -93,8 +93,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             justifyContent: 'space-between',
             padding: '0.28rem 0.5rem',
             paddingLeft: `${depth * 0.75 + 0.6}rem`,
-            backgroundColor: isSelected ? '#094771' : 'transparent',
-            borderLeft: isSelected ? '2px solid #007acc' : '2px solid transparent',
+            backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+            borderLeft: isSelected ? '2px solid #f4f4f5' : '2px solid transparent',
             color: isSelected ? '#ffffff' : 'var(--vscode-text-primary)',
             fontSize: '12px',
             cursor: 'pointer',

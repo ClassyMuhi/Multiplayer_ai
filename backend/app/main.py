@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.database.connection import init_db
-from app.api import projects, files, agent, ws, memory, messages, git, users
+from app.api import projects, files, agent, ws, memory, messages, git, users, terminal
 from app.services.project_service import project_service
 
 # Setup logging
@@ -45,6 +45,7 @@ app.add_middleware(
 app.include_router(projects.router)
 app.include_router(files.preview_router)
 app.include_router(files.router)
+app.include_router(terminal.router)
 
 app.include_router(agent.router)
 app.include_router(ws.router)
