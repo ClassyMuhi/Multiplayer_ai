@@ -1,10 +1,11 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  type Auth,
   type User as FirebaseUser
 } from 'firebase/auth';
 
@@ -19,17 +20,33 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
 };
 
-// Initialize Firebase App ONLY (Singleton pattern)
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+export const isFirebaseConfigured = Boolean(
+  firebaseConfig.apiKey && firebaseConfig.apiKey.trim().length > 5
+);
 
-// Initialize Firebase Auth ONLY
-export const auth = getAuth(app);
+// Safely initialize Firebase App (Singleton pattern)
+let app: FirebaseApp | null = null;
+let authInstance: Auth | null = null;
+let googleProviderInstance: GoogleAuthProvider | null = null;
 
-// Configure Google Auth Provider
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+if (isFirebaseConfigured) {
+  try {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    authInstance = getAuth(app);
+    googleProviderInstance = new GoogleAuthProvider();
+    googleProviderInstance.setCustomParameters({
+      prompt: 'select_account'
+    });
+  } catch (err) {
+    console.warn('Firebase failed to initialize with provided config:', err);
+    app = null;
+    authInstance = null;
+    googleProviderInstance = null;
+  }
+}
+
+export const auth = authInstance;
+export const googleProvider = googleProviderInstance;
 
 export interface AuthUserProfile {
   uid: string;
@@ -42,8 +59,12 @@ export interface AuthUserProfile {
  * Sign in using Firebase Google Authentication Popup
  */
 export const signInWithGoogle = async (): Promise<AuthUserProfile> => {
+  if (!authInstance || !googleProviderInstance) {
+    throw new Error('Firebase Google Authentication is not configured. Please supply VITE_FIREBASE_API_KEY in .env or sign in using Preset Accounts / Custom Developer profile.');
+  }
+
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(authInstance, googleProviderInstance);
     const user = result.user;
     return {
       uid: user.uid,
@@ -78,11 +99,11 @@ export const signInWithGoogle = async (): Promise<AuthUserProfile> => {
  * Sign out of Firebase Authentication
  */
 export const signOutUser = async (): Promise<void> => {
+  if (!authInstance) return;
   try {
-    await firebaseSignOut(auth);
+    await firebaseSignOut(authInstance);
   } catch (error) {
     console.error('Error signing out of Firebase:', error);
-    throw error;
   }
 };
 
@@ -92,5 +113,9 @@ export const signOutUser = async (): Promise<void> => {
 export const subscribeToAuthState = (
   callback: (user: FirebaseUser | null) => void
 ) => {
-  return onAuthStateChanged(auth, callback);
+  if (!authInstance) {
+    return () => {};
+  }
+  return onAuthStateChanged(authInstance, callback);
 };
+

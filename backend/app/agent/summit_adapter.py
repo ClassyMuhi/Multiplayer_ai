@@ -133,7 +133,7 @@ class SummitAdapter:
         # Intelligent fallback to the provider for which an API key is present
         if not model or (model in ("gpt-4o", "gpt-4o-mini") and not openai_key):
             if groq_key:
-                model = "groq/openai/gpt-oss-120b"
+                model = "groq/llama-3.3-70b-versatile"
             elif gemini_key:
                 model = "gemini/gemini-2.0-flash"
             elif anthropic_key:
@@ -142,8 +142,11 @@ class SummitAdapter:
                 model = "gpt-4o"
 
         # Format model prefix correctly for LiteLLM
-        if groq_key and ("llama" in model.lower() or "gpt-oss" in model.lower() or "oss-120b" in model.lower()):
-            model = "groq/openai/gpt-oss-120b"
+        if groq_key and ("llama" in model.lower() or "gpt-oss" in model.lower() or "oss-120b" in model.lower() or "groq" in model.lower()):
+            if "8b" in model.lower():
+                model = "groq/llama-3.1-8b-instant"
+            else:
+                model = "groq/llama-3.3-70b-versatile"
         elif ("qwen" in model.lower() or "gemma" in model.lower() or "mixtral" in model.lower()) and groq_key:
             if not model.startswith("groq/"):
                 model = f"groq/{model}"
@@ -194,10 +197,10 @@ class SummitAdapter:
                 "type": "function",
                 "function": {
                     "name": "run_terminal",
-                    "description": "Run a shell command in the project directory (e.g. pytest, python)",
+                    "description": "Run a shell command in the project directory (e.g. pytest, python script.py)",
                     "parameters": {
                         "type": "object",
-                        "properties": {"command": {"type": "string", "description": "Terminal command"}},
+                        "properties": {"command": {"type": "string", "description": "Terminal command string"}},
                         "required": ["command"]
                     }
                 }
@@ -238,9 +241,13 @@ class SummitAdapter:
             {
                 "role": "system",
                 "content": (
-                    "You are Summit AI, an expert collaborative coding agent. "
+                    "You are Summit AI, an expert collaborative coding agent.\n"
                     "You inspect repository files, implement complete working web applications (HTML/CSS/JS/Python), "
-                    "save architectural decisions to project memory, run tests, and collaborate with human developers."
+                    "save architectural decisions to project memory, run tests, and collaborate with human developers.\n"
+                    "IMPORTANT INSTRUCTIONS:\n"
+                    "1. Always format tool call arguments strictly as valid, standard JSON objects.\n"
+                    "2. When calling `write_file`, write clean file content directly.\n"
+                    "3. When calling `run_terminal`, pass single clean command lines (e.g. `python server.py` or `pytest`). Never pass multiline shell heredocs (like `<<'PY'`)."
                 )
             },
             {
@@ -262,12 +269,27 @@ class SummitAdapter:
                 )
             )
 
-            response = await litellm.acompletion(
-                model=model,
-                messages=messages,
-                tools=tools,
-                api_key=api_key
-            )
+            try:
+                response = await litellm.acompletion(
+                    model=model,
+                    messages=messages,
+                    tools=tools,
+                    api_key=api_key
+                )
+            except Exception as call_err:
+                # If tool-calling fails due to provider parser error, attempt fallback to Gemini if key available
+                if ("tool_use_failed" in str(call_err) or "Failed to parse tool call" in str(call_err)) and gemini_key and not model.startswith("gemini/"):
+                    logger.warning(f"Tool calling failed on {model} ({call_err}). Retrying with Gemini 2.0 Flash...")
+                    model = "gemini/gemini-2.0-flash"
+                    api_key = gemini_key
+                    response = await litellm.acompletion(
+                        model=model,
+                        messages=messages,
+                        tools=tools,
+                        api_key=api_key
+                    )
+                else:
+                    raise call_err
 
             choice = response.choices[0]
             msg = choice.message
@@ -297,7 +319,20 @@ class SummitAdapter:
             for tc in tool_calls:
                 await session_manager.check_pause(project_id)
                 fn_name = tc.function.name
-                fn_args = json.loads(tc.function.arguments)
+                
+                try:
+                    if isinstance(tc.function.arguments, dict):
+                        fn_args = tc.function.arguments
+                    else:
+                        fn_args = json.loads(tc.function.arguments or "{}")
+                except Exception as json_err:
+                    logger.warning(f"Could not parse tool call arguments: {tc.function.arguments} ({json_err})")
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": f"Error: Tool arguments could not be parsed as valid JSON ({str(json_err)}). Please provide valid JSON."
+                    })
+                    continue
 
                 if fn_name == "read_file":
                     rel_path = fn_args.get("path", "")

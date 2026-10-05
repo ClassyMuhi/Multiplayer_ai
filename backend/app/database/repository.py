@@ -302,3 +302,5 @@ class Repository:
 
 
 repository = Repository()
+DatabaseRepository = Repository
+
