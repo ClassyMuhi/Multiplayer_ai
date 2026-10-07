@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import type { FileConflictData } from '../types';
 import { ShieldAlert, RefreshCw, AlertTriangle, X } from 'lucide-react';
 
@@ -17,7 +18,7 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({
 }) => {
   if (!conflict) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay">
       <div className="modal-box" style={{ maxWidth: '620px', border: '1px solid var(--vscode-accent-red)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
@@ -76,6 +77,7 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

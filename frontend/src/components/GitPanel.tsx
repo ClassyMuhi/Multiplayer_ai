@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { GitStatus } from '../types';
 import * as api from '../api/client';
 import {
@@ -240,7 +241,7 @@ export const GitPanel: React.FC<GitPanelProps> = ({
       </div>
 
       {/* 1. Commit & Push Modal */}
-      {showCommitModal && (
+      {showCommitModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowCommitModal(false)}>
           <div className="modal-box" style={{ maxWidth: '540px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
@@ -356,11 +357,12 @@ export const GitPanel: React.FC<GitPanelProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 2. Connect GitHub Remote Modal */}
-      {showGithubModal && (
+      {showGithubModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowGithubModal(false)}>
           <div className="modal-box" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
@@ -422,11 +424,12 @@ export const GitPanel: React.FC<GitPanelProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 3. Git Diff Modal */}
-      {showDiff && (
+      {showDiff && createPortal(
         <div className="modal-overlay" onClick={() => setShowDiff(false)}>
           <div className="modal-box" style={{ maxWidth: '800px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
@@ -459,7 +462,8 @@ export const GitPanel: React.FC<GitPanelProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
