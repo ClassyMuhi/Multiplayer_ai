@@ -357,22 +357,38 @@
   <h2 class="section-heading">III. System Architecture and Methodology</h2>
   
   <div class="figure-box">
-    <b>Client Tier: Browser-Native Web IDE</b>
+    <b>1. Client Tier: Multiple Concurrent Users in Shared Web IDE</b>
     <ul style="margin:2pt 0; padding-left:10pt;">
-      <li>Monaco Editor Core | Integrated Terminal (Xterm.js)</li>
-      <li>Live Web App Preview | Interactive Conflict Modal</li>
+      <li>Monaco Editor Core (OCC Diff) | Integrated Xterm.js Subsystem</li>
+      <li>Live Sandboxed Web Preview | Multi-User Presence & Avatars</li>
     </ul>
-    &nbsp;&nbsp;↕ <i>HTTP REST + WebSockets</i><br>
-    <b>FastAPI Backend (Uvicorn ASGI)</b>
+    &nbsp;&nbsp;↕ <i>HTTP REST + Real-Time WebSocket Streams</i><br>
+    <b>2. AI Orchestration & Context Retrieval (FastAPI ASGI)</b>
     <ul style="margin:2pt 0; padding-left:10pt;">
-      <li>Routers (Projects, Files, Agent, Git, WS, Terminal)</li>
-      <li>SessionManager (WS Rooms) | SummitAdapter (LiteLLM)</li>
-      <li>ContextRetriever | WorkspaceManager (OCC)</li>
+      <li>SessionManager (WebSocket Rooms & Concurrency Locks)</li>
+      <li>Query Processor & Intent Parser | ContextRetriever (Path Relevance & MemoryService)</li>
     </ul>
-    &nbsp;&nbsp;↕ <i>Direct Connection SQLite Pool</i><br>
-    <b>Persistence Tier (SQLite: summit.db)</b>
+    &nbsp;&nbsp;↙ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↘<br>
+    <div style="display: flex; justify-content: space-between; margin: 3pt 0;">
+      <div style="width: 48%; border: 1px dashed #999; padding: 3pt; font-size: 7.5pt;">
+        <b>DB 1: Project State (SQLite)</b><br>
+        • Files, AST & OCC Versions<br>
+        • Messages & Git Checkpoints
+      </div>
+      <div style="width: 48%; border: 1px dashed #999; padding: 3pt; font-size: 7.5pt;">
+        <b>DB 2: Vector / Memory (ChromaDB)</b><br>
+        • Dense Embeddings<br>
+        • Semantic Memory & Facts
+      </div>
+    </div>
+    &nbsp;&nbsp;↘ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↙<br>
+    <b>3. Context Builder & LLM Inference Engine</b>
+    <ul style="margin:2pt 0; padding-left:10pt;">
+      <li>Prompt Assembler & Token Budgeting → LiteLLM Multi-Model Dispatcher</li>
+      <li>Streaming Tool Execution & Code Diffs → WebSocket Broadcast to Shared IDE</li>
+    </ul>
   </div>
-  <div class="figure-caption">Fig. 1. Summit Full-Stack Multiplayer Web IDE Architecture.</div>
+  <div class="figure-caption">Fig. 1. Summit Full-Stack Multiplayer AI Web IDE Architecture with Dual-Store Memory Pipeline.</div>
 
   <h3 class="subsection-heading">A. Browser-Native Web IDE Subsystem</h3>
   <p>

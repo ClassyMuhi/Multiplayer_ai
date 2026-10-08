@@ -61,35 +61,131 @@ Modern AI developer tools have progressed from line-level completion to autonomo
 ## III. SYSTEM ARCHITECTURE AND METHODOLOGY
 
 ```
-+-------------------------------------------------------------------------+
-|                  Client Tier: Browser-Native Web IDE                   |
-|  +-----------------------+-----------------------+-------------------+  |
-|  | Monaco Editor Core    | Xterm.js Subsystem    | Live Web Preview  |  |
-|  | (Syntax / OCC Diff)   | (PTY / Subprocess)    | (Sandboxed Iframe)|  |
-|  +-----------------------+-----------------------+-------------------+  |
-|  | FileExplorer Tree     | ProjectHeader Avatars | Agent Control Log |  |
-|  +-----------------------+-----------------------+-------------------+  |
-+-------------------------------------------------------------------------+
-                                    ▲
-                                    │ HTTP REST + WebSockets
-                                    ▼
-+-------------------------------------------------------------------------+
-|                  FastAPI Application Server (Uvicorn ASGI)              |
-|  +-------------------------------------------------------------------+  |
-|  | Routers: /projects, /files, /agent, /memory, /git, /ws, /terminal |  |
-|  +-------------------------------------------------------------------+  |
-|  | SessionManager      | SummitAdapter (LiteLLM Router)              |  |
-|  | ContextRetriever    | WorkspaceManager (Optimistic Concurrency)   |  |
-|  | GitService          | Repository (Raw SQL / Connection Context)   |  |
-|  +-------------------------------------------------------------------+  |
-+-------------------------------------------------------------------------+
-                                    ▲
-                                    │ Direct SQLite Connections
-                                    ▼
-+-------------------------------------------------------------------------+
-|                       Persistence Tier (SQLite)                         |
-|  users | projects | messages | project_memories | file_versions | git   |
-+-------------------------------------------------------------------------+
+====================================================================================================
+                        FIG. 1: SUMMIT SYSTEM MODULE & COMPONENT BLOCK DIAGRAM
+====================================================================================================
+
++--------------------------------------------------------------------------------------------------+
+|                                1. CLIENT TIER: BROWSER WEB IDE                                   |
+|  +-------------------------------------+  +---------------------------------------------------+  |
+|  |           EDITOR MODULES            |  |             COLLABORATION MODULES                 |  |
+|  | • Monaco Editor Core (Syntax, OCC)  |  | • Presence Manager (User Avatars & Room State)    |  |
+|  | • Xterm.js Subsystem (Bidirectional)|  | • Agent Panel (Telemetry Drawer & Chat Stream)    |  |
+|  | • Live Preview Engine (Sandboxed)   |  | • Conflict Resolution Modal (Side-by-Side Diff)   |  |
+|  +-------------------------------------+  +---------------------------------------------------+  |
++--------------------------------------------------------------------------------------------------+
+                                                 ▲
+                                                 │ WebSockets (Events) + HTTP REST (APIs)
+                                                 ▼
++--------------------------------------------------------------------------------------------------+
+|                             2. APPLICATION & ORCHESTRATION TIER (FastAPI)                        |
+|  +--------------------------------------------------------------------------------------------+  |
+|  | API ROUTERS: /projects  |  /files  |  /agent  |  /memory  |  /git  |  /ws  |  /terminal        |  |
+|  +--------------------------------------------------------------------------------------------+  |
+|  +------------------------------------+  +----------------------------------------------------+  |
+|  |           CORE SERVICES            |  |              AI CONTEXT SUBSYSTEM                  |  |
+|  | • SessionManager (Rooms & Locks)   |  | • Intent Parser & Query Processor                  |  |
+|  | • WorkspaceManager (OCC Concurrency|  | • ContextRetriever (Path Relevance Scoring)        |  |
+|  | • GitService & Terminal Subprocess |  | • MemoryService (Dual-Store Deduplication)         |  |
+|  +------------------------------------+  +----------------------------------------------------+  |
++--------------------------------------------------------------------------------------------------+
+             ▲                                                                      ▲
+             │ Tool Execution & Streaming                                           │ SQL & Semantic
+             ▼                                                                      ▼
++---------------------------------------+  +-------------------------------------------------------+
+|     3. AI INFERENCE ENGINE TIER       |  |          4. DUAL-PERSISTENCE & STORAGE TIER           |
+| • SummitAdapter (Autonomous Agent Loop|  | +---------------------------------------------------+ |
+| • LiteLLM Multi-Provider Dispatcher   |  | | Relational Store (SQLite: summit.db)              | |
+| • Model Endpoints:                    |  | | • users, projects, messages, project_memories     | |
+|   - Claude 3.5 Sonnet / GPT-4o        |  | | • file_versions (OCC), git_checkpoints            | |
+|   - DeepSeek-V3 / Gemini 2.5 Pro      |  | +---------------------------------------------------+ |
+|   - Local Self-Hosted LLMs (Ollama)   |  | +-------------------------+ +-----------------------+ |
+| • Offline Fallback Generation Engine  |  | | Vector DB (ChromaDB)    | | Sandboxed Filesystem  | |
++---------------------------------------+  +-------------------------------------------------------+
+====================================================================================================
+```
+
+```
+                       FIG. 2: END-TO-END MULTI-USER AI DATAFLOW PIPELINE
+                       
+                       MULTIPLE CONCURRENT USERS
+              ┌──────────────┬──────────────┬──────────────┐
+              │    User 1    │    User 2    │    User 3    │
+              └───────┬──────┴───────┬──────┴───────┬──────┘
+                      └──────────────┼──────────────┘
+                                     │ (WebSockets & HTTP REST)
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │     SHARED WORKSPACE / BROWSER WEB IDE     │
+              │  • Monaco Editor Core • Xterm.js Terminal  │
+              │  • Live Web Preview   • Presence & OCC Diff│
+              └──────────────────────┬─────────────────────┘
+                                     │ (User Prompt / Actions & Presence)
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │              AI ORCHESTRATOR               │
+              │  (FastAPI SessionManager & Lock Engine)    │
+              └──────────────────────┬─────────────────────┘
+                                     │
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │      QUERY PROCESSOR & INTENT PARSER       │
+              └──────────────────────┬─────────────────────┘
+                                     │
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │          CONTEXT RETRIEVAL ENGINE          │
+              │      (MemoryService & Path Relevance)      │
+              └──────────────┬──────────────────┬──────────┘
+                             │ (Code & History) │ (Semantic Search)
+                             ▼                  ▼
+             ┌────────────────────────┐  ┌────────────────────────┐
+             │       DATABASE 1       │  │       DATABASE 2       │
+             │     PROJECT STATE      │  │     VECTOR / MEMORY    │
+             │        (SQLite)        │  │       (ChromaDB)       │
+             │ • File contents & AST  │  │ • Dense Embeddings     │
+             │ • Versioning (OCC)     │  │ • Semantic Memories    │
+             │ • Messages & Commits   │  │ • Cross-Session Facts  │
+             └───────────────┬────────┘  └──────────┬─────────────┘
+                             │ (State & Diffs)      │ (Top-k Relevant Hits)
+                             └──────────┬───────────┘
+                                        │
+                                        ▼
+              ┌────────────────────────────────────────────┐
+              │              CONTEXT BUILDER               │
+              │   • Prompt Assembly   • Token Budgeting    │
+              │   • Memory Injection  • File Snippets      │
+              └──────────────────────┬─────────────────────┘
+                                     │ (Optimized Prompt)
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │              INFERENCE ENGINE              │
+              │        (LiteLLM Multi-Model Router)        │
+              └──────────────────────┬─────────────────────┘
+                                     │
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │             LOCAL / CLOUD LLM              │
+              │  (Claude, GPT-4o, DeepSeek, Gemini, Local) │
+              └──────────────────────┬─────────────────────┘
+                                     │ (Generated Code / Tool Invocations)
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │     STREAMING & CODE DIFF DISPATCHER       │
+              │    (File Mutations & Real-Time Events)     │
+              └──────────────────────┬─────────────────────┘
+                                     │ (Broadcast over WebSockets)
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │        SHARED COLLABORATIVE WEB IDE        │
+              └──────────────────────┬─────────────────────┘
+                                     │
+                                     ▼
+              ┌────────────────────────────────────────────┐
+              │         MULTI-USER FEEDBACK / EDITS        │
+              └──────────────────────┬─────────────────────┘
+                                     │
+                                     └────────────────────→ (AI ORCHESTRATOR)
 ```
 
 ### A. Browser-Native Web IDE Subsystem

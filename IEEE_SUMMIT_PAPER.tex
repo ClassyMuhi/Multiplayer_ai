@@ -105,42 +105,63 @@ Deterministic Context Retrieval & No & No & No & No & No & \textbf{Yes (Path Rel
 \subsection{Full-Stack Architecture Overview}
 As illustrated in Fig.~\ref{fig:arch}, Summit is engineered as a decoupled, multi-tier system. The backend is implemented in asynchronous Python (FastAPI/Uvicorn), and the frontend is a single-page React 19/TypeScript application hosting the Web IDE components.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
 \fbox{
-\begin{minipage}{0.92\linewidth}
+\begin{minipage}{0.96\linewidth}
 \scriptsize
-\textbf{Client Tier: Browser-Native Web IDE}
+\textbf{1. Client Tier: Multiple Concurrent Users in Shared Browser-Native Web IDE}
 \begin{itemize}
-    \item \textbf{CodeEditor:} Monaco Editor Syntax Core, Version Badges, Diff View
-    \item \textbf{Terminal:} Xterm.js Subsystem with Fit \& WebLinks Addons
-    \item \textbf{Live Preview:} Sandboxed Iframe Rendering Dynamic Web Artifacts
-    \item \textbf{Collaboration:} ProjectHeader User Avatars, Agent Control Drawer
+    \item \textbf{Collaborative Clients:} Concurrent User Instances ($U_1, U_2, \dots, U_n$) with Live Presence \& Avatars
+    \item \textbf{Monaco Editor Core:} Syntax Highlighting, Real-Time OCC Diffs, Version Badges
+    \item \textbf{Terminal \& Live Preview:} Interactive Xterm.js Subsystem (PTY) + Sandboxed Iframe Web Preview
 \end{itemize}
 \begin{center}
-$\updownarrow$ \textit{HTTP REST (CRUD, Git, Terminal) + WebSocket (Real-Time Streams)}
+$\updownarrow$ \textit{Bidirectional WebSockets (Real-Time Events/Streams) + HTTP REST (File CRUD, Git, Terminal)}
 \end{center}
-\textbf{FastAPI Application Server (Uvicorn ASGI)}
+\textbf{2. AI Orchestration \& Query Processing Tier (FastAPI/Uvicorn ASGI)}
 \begin{itemize}
-    \item \textbf{API Routing Layer:} 9 Routers (Projects, Files, Agent, Git, WS, Terminal)
-    \item \textbf{Agent Engine (SummitAdapter):} LiteLLM Multi-Provider Dispatcher
-    \item \textbf{SessionManager:} In-Memory WS Room Registry \& Lifecycle Events
-    \item \textbf{ContextRetriever:} Path-Relevance Scoring \& Prompt Assembler
-    \item \textbf{WorkspaceManager:} Sandboxed Filesystem Access \& OCC Conflict Check
-    \item \textbf{GitService:} Subprocess-Driven Local Checkpoints \& Remote Sync
+    \item \textbf{AI Orchestrator \& SessionManager:} WebSocket Room Synchronization, Concurrency Locks, Event Broadcast
+    \item \textbf{Query Processor \& Intent Parser:} User Request Analysis, Parameter Extraction, Tool Dispatch Planning
+    \item \textbf{Context Retrieval Engine (MemoryService):} Path-Relevance Scoring \& Hybrid Semantic Vector Search
 \end{itemize}
 \begin{center}
-$\updownarrow$ \textit{Direct SQLite Connection Pool (Zero ORM Overhead)}
+$\swarrow$ \hspace{6cm} $\searrow$
 \end{center}
-\textbf{Relational Persistence Tier (SQLite: summit.db)}
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{3a. Project State Store (SQLite: summit.db)}
 \begin{itemize}
-    \item \texttt{users}, \texttt{projects}, \texttt{messages}, \texttt{project\_memories}, \texttt{file\_versions}, \texttt{git\_checkpoints}
+    \item \texttt{users}, \texttt{projects}, \texttt{messages} (Conversation)
+    \item \texttt{file\_versions} (OCC), \texttt{git\_checkpoints}
+    \item Raw File Buffers \& Codebase AST
+\end{itemize}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{3b. Semantic Vector DB (ChromaDB)}
+\begin{itemize}
+    \item Dense Vector Embeddings
+    \item Project-Scoped Semantic Memories
+    \item Cross-Session Architectural Facts \& Decisions
+\end{itemize}
+\end{minipage}
+\vspace{0.2cm}
+\begin{center}
+$\searrow$ \hspace{6cm} $\swarrow$ \\
+$\downarrow$ \textit{Context Assembler \& Token Budget Manager}
+\end{center}
+\textbf{4. Context Builder, Inference Engine, and Execution Loop}
+\begin{itemize}
+    \item \textbf{Context Builder:} Dynamic Prompt Assembly, Memory Injection, Truncated Code Snippet Budgeting
+    \item \textbf{Inference Engine (LiteLLM Router):} Multi-Provider Model Dispatch (Claude, GPT-4o, DeepSeek, Gemini, Local)
+    \item \textbf{Execution \& Streaming Dispatcher:} Tool Invocation, File Mutations, Git Checkpoints, OCC Conflict Detection
+    \item \textbf{Feedback Loop:} Real-Time Telemetry to Shared IDE $\rightarrow$ Multi-User Feedback Loop $\rightarrow$ AI Orchestrator
 \end{itemize}
 \end{minipage}
 }
-\caption{Summit Full-Stack Multiplayer Web IDE Architecture.}
+\caption{Summit Full-Stack Multiplayer AI Web IDE Architecture with Dual-Store Memory and Streaming Inference Pipeline.}
 \label{fig:arch}
-\end{figure}
+\end{figure*}
 
 \subsection{Browser-Native Web IDE Subsystem}
 The Web IDE provides a developer environment directly in the browser through four integrated components:
