@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { Project, UserPresence } from '../types';
 import {
   Code2,
@@ -486,7 +487,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       </div>
 
       {/* Add / Invite Teammate Modal */}
-      {showInviteModal && (
+      {showInviteModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
           <div className="modal-box" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -716,11 +717,12 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* New Project Modal */}
-      {showNewModal && (
+      {showNewModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowNewModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <h3 style={{ marginBottom: '1rem', fontSize: '13px', fontWeight: 600, color: 'var(--vscode-text-white)' }}>
@@ -765,7 +767,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );
