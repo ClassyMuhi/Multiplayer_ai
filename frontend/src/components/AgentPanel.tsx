@@ -96,13 +96,13 @@ function getUserTheme(userId?: string, userName?: string) {
 }
 
 export const AVAILABLE_MODELS = [
-  { id: 'groq/openai/gpt-oss-120b', label: 'Groq: GPT-OSS 120B (Active)' },
-  { id: 'groq/openai/gpt-oss-20b', label: 'Groq: GPT-OSS 20B' },
-  { id: 'groq/qwen/qwen3.8-27b', label: 'Groq: Qwen 3.8 27B' },
+  { id: 'groq/llama-3.3-70b-versatile', label: 'Groq: Llama 3.3 70B' },
+  { id: 'groq/llama-3.1-8b-instant', label: 'Groq: Llama 3.1 8B (Fast)' },
+  { id: 'groq/deepseek-r1-distill-llama-70b', label: 'Groq: DeepSeek R1 70B' },
   { id: 'gemini/gemini-2.0-flash', label: 'Gemini: 2.0 Flash' },
   { id: 'gemini/gemini-1.5-flash', label: 'Gemini: 1.5 Flash' },
   { id: 'gpt-4o', label: 'OpenAI: GPT-4o' },
-  { id: 'autonomous', label: 'Summit Autonomous Engine' },
+  { id: 'autonomous', label: 'Summit Autonomous Engine (Offline/Local)' },
   { id: 'custom', label: 'Custom Model ID...' }
 ];
 
@@ -128,13 +128,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const [prompt, setPrompt] = useState('');
   const [selectedModel, setSelectedModel] = useState<string>(() => {
     const saved = localStorage.getItem('summit_selected_model');
-    if (saved && !saved.includes('llama') && saved !== 'groq/llama-3.3-70b-versatile') {
-      return saved;
-    }
-    return 'groq/openai/gpt-oss-120b';
+    if (saved) return saved;
+    return 'groq/llama-3.3-70b-versatile';
   });
   const [customModel, setCustomModel] = useState<string>(() => {
-    return localStorage.getItem('summit_custom_model') || 'groq/openai/gpt-oss-120b';
+    return localStorage.getItem('summit_custom_model') || 'groq/llama-3.3-70b-versatile';
   });
   const endRef = useRef<HTMLDivElement>(null);
 

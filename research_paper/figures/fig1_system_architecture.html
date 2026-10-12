@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin:0; padding:0; background:#ffffff; overflow:hidden; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 680" width="1100" height="680" style="background:#ffffff; font-family:'Segoe UI', Helvetica, Arial, sans-serif;">
+  <defs>
+    <linearGradient id="clientGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eff6ff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+    <linearGradient id="gatewayGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5f3ff"/>
+      <stop offset="100%" stop-color="#ede9fe"/>
+    </linearGradient>
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0fdf4"/>
+      <stop offset="100%" stop-color="#dcfce7"/>
+    </linearGradient>
+    <linearGradient id="memGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="100%" stop-color="#fef3c7"/>
+    </linearGradient>
+    <linearGradient id="wsGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#faf5ff"/>
+      <stop offset="100%" stop-color="#f3e8ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-3%" y="-3%" width="106%" height="108%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#334155"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <!-- Title Banner -->
+  <rect x="20" y="15" width="1060" height="42" rx="6" fill="#1e293b"/>
+  <text x="550" y="42" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle" letter-spacing="0.5">
+    SYSTEM ARCHITECTURE: MULTIPLAYER AI CODING AGENT WITH PERSISTENT PROJECT MEMORY
+  </text>
+
+  <!-- LAYER 1: CLIENT TIER -->
+  <rect x="20" y="70" width="1060" height="110" rx="8" fill="url(#clientGrad)" stroke="#93c5fd" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="35" y="93" fill="#1e3a8a" font-size="13" font-weight="bold">COLLABORATIVE FRONTEND CLIENTS (React / TypeScript / Vite / Monaco Editor)</text>
+  
+  <!-- Client Boxes -->
+  <g transform="translate(45, 105)">
+    <!-- Client A -->
+    <rect x="0" y="0" width="220" height="60" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="1.5"/>
+    <circle cx="20" cy="22" r="9" fill="#2563eb"/>
+    <text x="20" y="26" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">A</text>
+    <text x="36" y="24" fill="#1e293b" font-size="11" font-weight="bold">Developer Alice</text>
+    <text x="12" y="45" fill="#64748b" font-size="9.5">Monaco Editor | Live Chat Stream</text>
+
+    <!-- Client B -->
+    <rect x="250" y="0" width="220" height="60" rx="6" fill="#ffffff" stroke="#10b981" stroke-width="1.5"/>
+    <circle cx="270" cy="22" r="9" fill="#059669"/>
+    <text x="270" y="26" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">B</text>
+    <text x="286" y="24" fill="#1e293b" font-size="11" font-weight="bold">Developer Bob</text>
+    <text x="262" y="45" fill="#64748b" font-size="9.5">OCC Conflict Modal | Git Panel</text>
+
+    <!-- Client C -->
+    <rect x="500" y="0" width="220" height="60" rx="6" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+    <circle cx="520" cy="22" r="9" fill="#d97706"/>
+    <text x="520" y="26" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">C</text>
+    <text x="536" y="24" fill="#1e293b" font-size="11" font-weight="bold">Developer Charlie</text>
+    <text x="512" y="45" fill="#64748b" font-size="9.5">Memory Panel | File Explorer</text>
+
+    <!-- Shared Services Box -->
+    <rect x="750" y="0" width="235" height="60" rx="6" fill="#ffffff" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="762" y="22" fill="#5b21b6" font-size="11" font-weight="bold">Client-Side Protocols</text>
+    <text x="762" y="38" fill="#475569" font-size="9.5">• ProjectWebSocket &amp; Reconnect</text>
+    <text x="762" y="52" fill="#475569" font-size="9.5">• REST Client (Axios / Fetch)</text>
+  </g>
+
+  <!-- LAYER 2: GATEWAY & SESSION MANAGEMENT -->
+  <rect x="20" y="195" width="1060" height="95" rx="8" fill="url(#gatewayGrad)" stroke="#c4b5fd" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="35" y="217" fill="#4c1d95" font-size="13" font-weight="bold">FASTAPI SERVER &amp; MULTIPLAYER SESSION MANAGER</text>
+
+  <g transform="translate(45, 227)">
+    <!-- WebSocket Stream Gateway -->
+    <rect x="0" y="0" width="310" height="52" rx="5" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+    <text x="12" y="20" fill="#6d28d9" font-size="10.5" font-weight="bold">WebSocket Room Hub (/api/projects/{id}/stream)</text>
+    <text x="12" y="38" fill="#475569" font-size="9">Connection Registry | Presence Tracking (UserPresenceInfo)</text>
+
+    <!-- Event Normalizer -->
+    <rect x="330" y="0" width="320" height="52" rx="5" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+    <text x="342" y="20" fill="#6d28d9" font-size="10.5" font-weight="bold">EventNormalizer &amp; Broadcast Bus</text>
+    <text x="342" y="38" fill="#475569" font-size="9">AGENT_STATUS | TOOL_CALL | TERMINAL | FILE_CHANGED</text>
+
+    <!-- REST API Endpoints -->
+    <rect x="670" y="0" width="315" height="52" rx="5" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+    <text x="682" y="20" fill="#6d28d9" font-size="10.5" font-weight="bold">REST Routers (Projects, Files, Git, Memory)</text>
+    <text x="682" y="38" fill="#475569" font-size="9">Path Validation | Auth Tokens | Health Check (/api/health)</text>
+  </g>
+
+  <!-- LAYER 3: CORE SUBSYSTEMS (AGENT, MEMORY, WORKSPACE) -->
+  
+  <!-- 3A: AI CODING AGENT ORCHESTRATOR -->
+  <rect x="20" y="305" width="410" height="355" rx="8" fill="url(#agentGrad)" stroke="#86efac" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="35" y="328" fill="#14532d" font-size="12.5" font-weight="bold">AI AGENT ORCHESTRATOR (SummitAdapter)</text>
+
+  <g transform="translate(35, 340)">
+    <!-- Lifecycle Controller -->
+    <rect x="0" y="0" width="380" height="50" rx="5" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+    <text x="12" y="19" fill="#15803d" font-size="10.5" font-weight="bold">Agent Execution &amp; Lifecycle Controller</text>
+    <text x="12" y="36" fill="#475569" font-size="9">State Machine: IDLE, THINKING, RUNNING, PAUSED, STOPPED</text>
+    <text x="290" y="36" fill="#16a34a" font-size="8.5" font-weight="bold">[asyncio.Event]</text>
+
+    <!-- Model Dispatcher -->
+    <rect x="0" y="60" width="380" height="75" rx="5" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+    <text x="12" y="78" fill="#15803d" font-size="10.5" font-weight="bold">Model-Agnostic LLM Dispatcher (LiteLLM)</text>
+    <text x="12" y="96" fill="#334155" font-size="9">• Cloud LLMs: Groq (Llama 3.3 70B, DeepSeek R1), Gemini 2.0 Flash</text>
+    <text x="12" y="111" fill="#334155" font-size="9">• Commercial APIs: OpenAI (GPT-4o), Anthropic (Claude 3.5 Sonnet)</text>
+    <text x="12" y="126" fill="#15803d" font-size="9" font-weight="bold">• Offline Deterministic Fallback Engine (Zero API Key Mode)</text>
+
+    <!-- Tool Execution Loop -->
+    <rect x="0" y="145" width="380" height="80" rx="5" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+    <text x="12" y="163" fill="#15803d" font-size="10.5" font-weight="bold">Sandboxed Tool Invocation Engine</text>
+    <text x="12" y="181" fill="#475569" font-size="9">• read_file(path) / write_file(path, content)</text>
+    <text x="12" y="196" fill="#475569" font-size="9">• run_terminal(command, cwd) [Pytest, Python Execution]</text>
+    <text x="12" y="211" fill="#475569" font-size="9">• save_memory(key, val) / git_checkpoint(message)</text>
+
+    <!-- Context Injection Interface -->
+    <rect x="0" y="235" width="380" height="60" rx="5" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+    <text x="12" y="253" fill="#15803d" font-size="10.5" font-weight="bold">Context Retrieval &amp; Prompt Budgeting</text>
+    <text x="12" y="271" fill="#475569" font-size="9">ContextRetriever &amp; ContextBuilder Context Assembly</text>
+    <text x="12" y="285" fill="#64748b" font-size="8.5">Memories (2.5kB) + Chat (6 turns) + Code Tree + Scored Files</text>
+  </g>
+
+  <!-- 3B: PERSISTENT MEMORY SUBSYSTEM -->
+  <rect x="445" y="305" width="335" height="355" rx="8" fill="url(#memGrad)" stroke="#fcd34d" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="460" y="328" fill="#78350f" font-size="12.5" font-weight="bold">DUAL-TIER PERSISTENT MEMORY SYSTEM</text>
+
+  <g transform="translate(460, 340)">
+    <!-- Relational Tier -->
+    <rect x="0" y="0" width="305" height="85" rx="5" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+    <text x="10" y="18" fill="#b45309" font-size="10" font-weight="bold">Tier 1: Relational Source-of-Truth (SQLite)</text>
+    <text x="10" y="35" fill="#475569" font-size="8.5">• conversation_messages (Full Chat Transcript)</text>
+    <text x="10" y="49" fill="#475569" font-size="8.5">• project_memories (Decisions, Conventions, Facts)</text>
+    <text x="10" y="63" fill="#475569" font-size="8.5">• agent_runs (Prompt, Status, Timestamps)</text>
+    <text x="10" y="77" fill="#475569" font-size="8.5">• file_changes &amp; file_versions (OCC Tracking)</text>
+
+    <!-- Vector Index Tier -->
+    <rect x="0" y="95" width="305" height="90" rx="5" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+    <text x="10" y="113" fill="#b45309" font-size="10" font-weight="bold">Tier 2: Semantic Vector Store (ChromaDB)</text>
+    <text x="10" y="130" fill="#475569" font-size="8.5">• LocalEmbeddingFunction: 384-d Dense Vector</text>
+    <text x="10" y="144" fill="#64748b" font-size="8">(N-gram Hashing, Positional Weights, L2-norm)</text>
+    <text x="10" y="158" fill="#475569" font-size="8.5">• HNSW Index with Cosine Space</text>
+    <text x="10" y="172" fill="#b45309" font-size="8.5" font-weight="bold">• Deduplication Guard: Distance &lt; 0.10 Updates</text>
+
+    <!-- Memory Extractor -->
+    <rect x="0" y="195" width="305" height="100" rx="5" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+    <text x="10" y="213" fill="#b45309" font-size="10" font-weight="bold">Automated Memory Extractor (MemoryExtractor)</text>
+    <text x="10" y="230" fill="#475569" font-size="8.5">• Trivial Pattern Filter (Regex Noise Rejection)</text>
+    <text x="10" y="244" fill="#475569" font-size="8.5">• Category Classifier: Architecture, Conventions,</text>
+    <text x="10" y="258" fill="#475569" font-size="8.5">  Bug Solutions, Project Facts, Context</text>
+    <text x="10" y="272" fill="#475569" font-size="8.5">• Dual Extraction Mode: LLM JSON / Heuristics</text>
+    <text x="10" y="286" fill="#15803d" font-size="8" font-weight="bold">Verified: 100% Offline / Non-blocking</text>
+  </g>
+
+  <!-- 3C: WORKSPACE & CONCURRENCY CONTROLLER -->
+  <rect x="795" y="305" width="285" height="355" rx="8" fill="url(#wsGrad)" stroke="#d8b4fe" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="810" y="328" fill="#581c87" font-size="12.5" font-weight="bold">WORKSPACE &amp; VERSIONING</text>
+
+  <g transform="translate(810, 340)">
+    <!-- Path Traversal Guard -->
+    <rect x="0" y="0" width="255" height="85" rx="5" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+    <text x="10" y="18" fill="#7e22ce" font-size="10" font-weight="bold">Workspace Isolation &amp; Security</text>
+    <text x="10" y="35" fill="#475569" font-size="8.5">• Root Boundary Validation</text>
+    <text x="10" y="49" fill="#dc2626" font-size="8.5">• Path Traversal Rejection (.. /)</text>
+    <text x="10" y="63" fill="#475569" font-size="8.5">• WorkspaceSecurityError</text>
+    <text x="10" y="77" fill="#15803d" font-size="8" font-weight="bold">Unit Tested: Zero Directory Escape</text>
+
+    <!-- OCC Controller -->
+    <rect x="0" y="95" width="255" height="100" rx="5" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+    <text x="10" y="113" fill="#7e22ce" font-size="10" font-weight="bold">Optimistic Concurrency Control (OCC)</text>
+    <text x="10" y="130" fill="#475569" font-size="8.5">• Monotonic File Version Counter</text>
+    <text x="10" y="144" fill="#475569" font-size="8.5">• Expected vs Server Version Check</text>
+    <text x="10" y="158" fill="#dc2626" font-size="8.5">• Conflict Detection: HTTP 409</text>
+    <text x="10" y="172" fill="#475569" font-size="8.5">• FileConflictError Payload</text>
+    <text x="10" y="186" fill="#6d28d9" font-size="8" font-weight="bold">Client Resolves: Reload vs Overwrite</text>
+
+    <!-- Git Service -->
+    <rect x="0" y="205" width="255" height="90" rx="5" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+    <text x="10" y="223" fill="#7e22ce" font-size="10" font-weight="bold">Local Git Checkpoint Engine</text>
+    <text x="10" y="240" fill="#475569" font-size="8.5">• Subprocess Git Interface</text>
+    <text x="10" y="254" fill="#475569" font-size="8.5">• Porcelain Status &amp; Diff Viewer</text>
+    <text x="10" y="268" fill="#475569" font-size="8.5">• Automated Agent Commit Points</text>
+    <text x="10" y="282" fill="#475569" font-size="8.5">• Optional Remote Push (origin/main)</text>
+  </g>
+
+  <!-- Connectors / Arrows -->
+  <line x1="550" y1="180" x2="550" y2="195" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="225" y1="290" x2="225" y2="305" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="610" y1="290" x2="610" y2="305" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="935" y1="290" x2="935" y2="305" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Horizontal Inter-subsystem Arrows -->
+  <line x1="430" y1="460" x2="445" y2="460" stroke="#059669" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <line x1="445" y1="490" x2="430" y2="490" stroke="#d97706" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <line x1="780" y1="470" x2="795" y2="470" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#arrow)"/>
+</svg>
+
+</body>
+</html>

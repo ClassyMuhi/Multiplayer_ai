@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin:0; padding:0; background:#ffffff; overflow:hidden; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 560" width="950" height="560" style="background:#ffffff; font-family:'Segoe UI', Helvetica, Arial, sans-serif;">
+  <defs>
+    <linearGradient id="mlBoxGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <marker id="mArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#1e293b"/>
+    </marker>
+    <marker id="mGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#16a34a"/>
+    </marker>
+    <marker id="mRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <!-- Title Banner -->
+  <rect x="20" y="12" width="910" height="38" rx="6" fill="#1e293b"/>
+  <text x="475" y="37" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">
+    DUAL-TIER PERSISTENT MEMORY LIFECYCLE &amp; CONTEXT INJECTION PIPELINE
+  </text>
+
+  <!-- PHASE 1: EXTRACTION & FILTERING -->
+  <rect x="20" y="65" width="280" height="470" rx="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="35" y="90" fill="#0f172a" font-size="12" font-weight="bold">PHASE 1: MEMORY EXTRACTION</text>
+
+  <!-- Completed Task Event -->
+  <rect x="35" y="105" width="250" height="55" rx="5" fill="#ffffff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="45" y="125" fill="#1e3a8a" font-size="10.5" font-weight="bold">Completed Agent Task Event</text>
+  <text x="45" y="142" fill="#64748b" font-size="9">Prompt, Outcome Summary, Modified Files</text>
+
+  <!-- Arrow -->
+  <line x1="160" y1="160" x2="160" y2="180" stroke="#1e293b" stroke-width="1.5" marker-end="url(#mArrow)"/>
+
+  <!-- Trivial Noise Filter -->
+  <rect x="35" y="180" width="250" height="75" rx="5" fill="#ffffff" stroke="#ef4444" stroke-width="1.2"/>
+  <text x="45" y="200" fill="#991b1b" font-size="10.5" font-weight="bold">Trivial Filter (is_trivial)</text>
+  <text x="45" y="217" fill="#475569" font-size="8.5">Regex Rejection: Length &lt; 10 chars,</text>
+  <text x="45" y="230" fill="#475569" font-size="8.5">"ok", "sure", "thanks", "fix this file", "run pytest"</text>
+  <text x="45" y="244" fill="#dc2626" font-size="8" font-weight="bold">Discards 100% of Ephemeral Noise</text>
+
+  <!-- Arrow -->
+  <line x1="160" y1="255" x2="160" y2="280" stroke="#16a34a" stroke-width="1.5" marker-end="url(#mGreen)"/>
+
+  <!-- Structured Classifier -->
+  <rect x="35" y="280" width="250" height="110" rx="5" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+  <text x="45" y="300" fill="#166534" font-size="10.5" font-weight="bold">Classification Engine</text>
+  <text x="45" y="318" fill="#334155" font-size="8.5">• Architecture Decision (prio=1, imp=0.85)</text>
+  <text x="45" y="332" fill="#334155" font-size="8.5">• Coding Convention (prio=2, imp=0.80)</text>
+  <text x="45" y="346" fill="#334155" font-size="8.5">• Bug Solution (prio=4, imp=0.75)</text>
+  <text x="45" y="360" fill="#334155" font-size="8.5">• Project Fact (prio=5, imp=0.70)</text>
+  <text x="45" y="376" fill="#15803d" font-size="8" font-weight="bold">Hybrid: Cloud LLM JSON / Local Heuristic</text>
+
+  <!-- Arrow -->
+  <line x1="160" y1="390" x2="160" y2="415" stroke="#1e293b" stroke-width="1.5" marker-end="url(#mArrow)"/>
+
+  <!-- Candidate Payload -->
+  <rect x="35" y="415" width="250" height="55" rx="5" fill="#ffffff" stroke="#8b5cf6" stroke-width="1.2"/>
+  <text x="45" y="435" fill="#5b21b6" font-size="10" font-weight="bold">Structured Memory Candidate</text>
+  <text x="45" y="452" fill="#64748b" font-size="8.5">Content, Category, Importance, ProjectID</text>
+
+  <!-- PHASE 2: PERSISTENCE & DEDUPLICATION -->
+  <rect x="325" y="65" width="300" height="470" rx="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="340" y="90" fill="#0f172a" font-size="12" font-weight="bold">PHASE 2: DEDUPLICATION &amp; STORAGE</text>
+
+  <!-- Deduplication Decision -->
+  <rect x="340" y="110" width="270" height="90" rx="5" fill="#ffffff" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="350" y="130" fill="#b45309" font-size="10" font-weight="bold">Semantic Deduplication Check</text>
+  <text x="350" y="147" fill="#475569" font-size="8.5">ChromaDB Top-1 Cosine Distance Search:</text>
+  <text x="350" y="162" fill="#d97706" font-size="9" font-weight="bold">d &lt; 0.10 ?</text>
+  <text x="350" y="177" fill="#15803d" font-size="8.5">YES: Update existing SQLite record &amp; vector</text>
+  <text x="350" y="191" fill="#2563eb" font-size="8.5">NO: Proceed to Dual Insert</text>
+
+  <!-- Connect candidate to dedup -->
+  <path d="M 285 442 L 310 442 L 310 155 L 340 155" fill="none" stroke="#1e293b" stroke-width="1.5" marker-end="url(#mArrow)"/>
+
+  <!-- Arrow down to storage -->
+  <line x1="475" y1="200" x2="475" y2="230" stroke="#1e293b" stroke-width="1.5" marker-end="url(#mArrow)"/>
+
+  <!-- Tier 1 SQLite Box -->
+  <rect x="340" y="230" width="270" height="110" rx="5" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+  <text x="350" y="250" fill="#1e3a8a" font-size="10" font-weight="bold">Tier 1: SQLite Relational Store</text>
+  <text x="350" y="267" fill="#475569" font-size="8.5">Primary Key: UUID (id)</text>
+  <text x="350" y="281" fill="#475569" font-size="8.5">project_id, memory_type, content, importance</text>
+  <text x="350" y="295" fill="#475569" font-size="8.5">created_by, is_active, created_at, updated_at</text>
+  <text x="350" y="310" fill="#1e40af" font-size="8" font-weight="bold">Authoritative Ground Truth Storage</text>
+  <text x="350" y="324" fill="#64748b" font-size="8">Full ACID transaction integrity</text>
+
+  <!-- Arrow to Tier 2 ChromaDB -->
+  <line x1="475" y1="340" x2="475" y2="365" stroke="#1e293b" stroke-width="1.5" marker-end="url(#mArrow)"/>
+
+  <!-- Tier 2 ChromaDB Box -->
+  <rect x="340" y="365" width="270" height="115" rx="5" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+  <text x="350" y="385" fill="#5b21b6" font-size="10" font-weight="bold">Tier 2: ChromaDB Vector Index</text>
+  <text x="350" y="402" fill="#475569" font-size="8.5">LocalEmbeddingFunction (dim=384)</text>
+  <text x="350" y="416" fill="#475569" font-size="8.5">Trigram hashing + subword projection</text>
+  <text x="350" y="430" fill="#475569" font-size="8.5">HNSW Cosine Space Graph Indexing</text>
+  <text x="350" y="445" fill="#7c3aed" font-size="8" font-weight="bold">Project-Level Collection Scoping</text>
+  <text x="350" y="460" fill="#16a34a" font-size="8" font-weight="bold">Zero External API / 100% Offline</text>
+
+  <!-- PHASE 3: CONTEXT INJECTION -->
+  <rect x="650" y="65" width="280" height="470" rx="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="665" y="90" fill="#0f172a" font-size="12" font-weight="bold">PHASE 3: CONTEXT INJECTION</text>
+
+  <!-- Downstream User Prompt -->
+  <rect x="665" y="110" width="250" height="60" rx="5" fill="#ffffff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="675" y="130" fill="#1e3a8a" font-size="10" font-weight="bold">New Incoming Developer Prompt</text>
+  <text x="675" y="147" fill="#64748b" font-size="8.5">Prompt: "Update token expiration logic"</text>
+  <text x="675" y="160" fill="#64748b" font-size="8">Keywords: [token, expiration, logic]</text>
+
+  <!-- Query ChromaDB -->
+  <path d="M 665 140 L 635 140 L 635 410 L 610 410" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="3,3" marker-end="url(#mArrow)"/>
+  <path d="M 610 435 L 635 435 L 635 210 L 665 210" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="3,3" marker-end="url(#mArrow)"/>
+
+  <!-- Context Prioritizer -->
+  <rect x="665" y="190" width="250" height="105" rx="5" fill="#ffffff" stroke="#10b981" stroke-width="1.2"/>
+  <text x="675" y="210" fill="#065f46" font-size="10" font-weight="bold">ContextBuilder Prioritization</text>
+  <text x="675" y="227" fill="#475569" font-size="8.5">1. Filter is_active == True</text>
+  <text x="675" y="241" fill="#475569" font-size="8.5">2. Sort Key: (CategoryPrio, -Importance)</text>
+  <text x="675" y="255" fill="#475569" font-size="8.5">3. Markdown Formatting by Category</text>
+  <text x="675" y="269" fill="#047857" font-size="8" font-weight="bold">Strict Budget Cap: Max 2500 Characters</text>
+  <text x="675" y="283" fill="#64748b" font-size="7.5">(Truncates low-priority items if over limit)</text>
+
+  <!-- Arrow -->
+  <line x1="790" y1="295" x2="790" y2="320" stroke="#1e293b" stroke-width="1.5" marker-end="url(#mArrow)"/>
+
+  <!-- Codebase Scorer -->
+  <rect x="665" y="320" width="250" height="85" rx="5" fill="#ffffff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="675" y="338" fill="#1e3a8a" font-size="10" font-weight="bold">Workspace File Scoring</text>
+  <text x="675" y="355" fill="#475569" font-size="8.5">• Exact match in path: +15 pts</text>
+  <text x="675" y="369" fill="#475569" font-size="8.5">• Keyword hit in filename: +4 pts</text>
+  <text x="675" y="383" fill="#475569" font-size="8.5">• Topic match (auth, test, api): +5 pts</text>
+  <text x="675" y="397" fill="#1e40af" font-size="8" font-weight="bold">Top 4 Files Selected (Max 6kB each)</text>
+
+  <!-- Arrow -->
+  <line x1="790" y1="405" x2="790" y2="430" stroke="#1e293b" stroke-width="1.5" marker-end="url(#mArrow)"/>
+
+  <!-- Final Prompt -->
+  <rect x="665" y="430" width="250" height="90" rx="5" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="675" y="450" fill="#1e3a8a" font-size="10" font-weight="bold">Consolidated Agent Prompt</text>
+  <text x="675" y="467" fill="#334155" font-size="8.5">[1] Project Persistent Memory (Markdown)</text>
+  <text x="675" y="481" fill="#334155" font-size="8.5">[2] Recent Multi-User Conversation (10 msgs)</text>
+  <text x="675" y="495" fill="#334155" font-size="8.5">[3] Directory Structure &amp; Scored Files</text>
+  <text x="675" y="509" fill="#2563eb" font-size="8" font-weight="bold">Passed to LiteLLM / Autonomous Engine</text>
+</svg>
+
+</body>
+</html>

@@ -124,13 +124,14 @@ class SummitAdapter:
         if anthropic_key:
             os.environ["ANTHROPIC_API_KEY"] = anthropic_key
 
-        model = model_override or settings.model_name
+        # Clean and normalize model name
+        model = (model_override or settings.model_name or "").strip()
 
         if model == "autonomous":
             await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
             return
 
-        # Intelligent fallback to the provider for which an API key is present
+        # Automatic fallback if default model has no key
         if not model or (model in ("gpt-4o", "gpt-4o-mini") and not openai_key):
             if groq_key:
                 model = "groq/llama-3.3-70b-versatile"
@@ -140,30 +141,48 @@ class SummitAdapter:
                 model = "claude-3-5-sonnet-20241022"
             elif openai_key:
                 model = "gpt-4o"
-
-        # Format model prefix correctly for LiteLLM
-        if groq_key and ("llama" in model.lower() or "gpt-oss" in model.lower() or "oss-120b" in model.lower() or "groq" in model.lower()):
-            if "8b" in model.lower():
-                model = "groq/llama-3.1-8b-instant"
             else:
-                model = "groq/llama-3.3-70b-versatile"
-        elif ("qwen" in model.lower() or "gemma" in model.lower() or "mixtral" in model.lower()) and groq_key:
-            if not model.startswith("groq/"):
-                model = f"groq/{model}"
-        elif model.startswith("gemini-") or ("gemini" in model.lower() and not model.startswith("gemini/")):
-            model = f"gemini/{model}"
+                model = "autonomous"
 
-        # Explicit key selection based on model family
+        if model == "autonomous":
+            await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
+            return
+
+        # Normalize model prefix for LiteLLM
+        model_lower = model.lower()
+        if (model_lower.startswith("llama") or model_lower.startswith("mixtral") or model_lower.startswith("gemma") or model_lower.startswith("deepseek")) and not model.startswith("groq/") and not model.startswith("ollama/"):
+            model = f"groq/{model}"
+        elif (model_lower.startswith("gemini-") or model_lower.startswith("models/gemini")) and not model.startswith("gemini/"):
+            model = f"gemini/{model.replace('models/', '')}"
+
+        # Explicit key selection based on model provider
         if model.startswith("groq/"):
             api_key = groq_key
+            provider_name = "Groq"
         elif model.startswith("gemini/"):
             api_key = gemini_key
+            provider_name = "Gemini"
         elif model.startswith("openai/") or model.startswith("gpt-"):
             api_key = openai_key
+            provider_name = "OpenAI"
         elif model.startswith("anthropic/") or model.startswith("claude"):
             api_key = anthropic_key
+            provider_name = "Anthropic"
         else:
             api_key = settings.api_key
+            provider_name = "configured AI provider"
+
+        if not api_key:
+            logger.warning(f"No API key found for {provider_name} (model: {model}). Switching to Autonomous Engine.")
+            await self._broadcast(
+                project_id,
+                EventNormalizer.agent_message(
+                    project_id=project_id,
+                    message=f"ℹ️ No API key configured for **{provider_name}** (`{model}`). Running Summit Codebase Autonomous Engine..."
+                )
+            )
+            await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
+            return
 
         tools = [
             {
