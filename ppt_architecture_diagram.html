@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin:0; padding:0; background:#0f172a; overflow:hidden; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" style="background:#0f172a; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+
+    <linearGradient id="cardClient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="cardHub" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="cardAgent" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+
+    <linearGradient id="badgeBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <linearGradient id="badgePurple" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+
+    <linearGradient id="badgeGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <linearGradient id="badgeAmber" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#fbbf24" />
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="glowShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+
+    <!-- Markers -->
+    <marker id="arrowRight" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrowLeft" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#a855f7"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Outer Canvas Border -->
+  <rect x="15" y="15" width="1170" height="645" rx="16" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="6 6"/>
+
+  <!-- ================= HEADER ================= -->
+  <text x="600" y="55" fill="url(#headerGrad)" font-size="26" font-weight="800" text-anchor="middle" letter-spacing="1">
+    SUMMIT: HIGH-LEVEL SYSTEM ARCHITECTURE
+  </text>
+  <text x="600" y="80" fill="#94a3b8" font-size="14" text-anchor="middle">
+    Multiplayer Real-Time Collaboration  •  Autonomous Tool-Calling Agent  •  Persistent Project Memory
+  </text>
+
+  <!-- ================= TIER 1: FRONTEND CLIENTS ================= -->
+  <g transform="translate(45, 115)">
+    <!-- Main Column Card -->
+    <rect x="0" y="0" width="320" height="500" rx="14" fill="url(#cardClient)" stroke="#38bdf8" stroke-width="2" filter="url(#glowShadow)"/>
+    
+    <!-- Tier Header -->
+    <rect x="0" y="0" width="320" height="52" rx="14" fill="#0369a1"/>
+    <rect x="0" y="30" width="320" height="22" fill="#0369a1"/>
+    <text x="160" y="33" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">1. COLLABORATIVE CLIENTS</text>
+    
+    <!-- Sub-boxes for Developer Alice & Developer Bob -->
+    <!-- Alice -->
+    <rect x="20" y="70" width="280" height="110" rx="10" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+    <circle cx="45" cy="98" r="14" fill="#2563eb"/>
+    <text x="45" y="103" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">A</text>
+    <text x="70" y="96" fill="#f8fafc" font-size="14" font-weight="bold">Developer Alice</text>
+    <text x="70" y="112" fill="#94a3b8" font-size="11">Active Prompter / Reviewer</text>
+    <rect x="35" y="130" width="250" height="34" rx="6" fill="#0f172a"/>
+    <text x="45" y="151" fill="#38bdf8" font-size="11.5">💬 "Add JWT auth to auth.py"</text>
+
+    <!-- Bob -->
+    <rect x="20" y="195" width="280" height="110" rx="10" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/>
+    <circle cx="45" cy="223" r="14" fill="#0284c7"/>
+    <text x="45" y="228" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">B</text>
+    <text x="70" y="221" fill="#f8fafc" font-size="14" font-weight="bold">Developer Bob</text>
+    <text x="70" y="237" fill="#94a3b8" font-size="11">Co-editor / Real-Time Observer</text>
+    <rect x="35" y="255" width="250" height="34" rx="6" fill="#0f172a"/>
+    <text x="45" y="276" fill="#10b981" font-size="11.5">⚡ Watching Live Stream &amp; Diffs</text>
+
+    <!-- Shared UI Workspace Box -->
+    <rect x="20" y="325" width="280" height="155" rx="10" fill="#0b1329" stroke="#334155" stroke-width="1"/>
+    <text x="160" y="352" fill="#e2e8f0" font-size="13" font-weight="bold" text-anchor="middle">React &amp; Monaco Workspace</text>
+    <line x1="35" y1="363" x2="285" y2="363" stroke="#334155" stroke-width="1"/>
+    <text x="40" y="385" fill="#cbd5e1" font-size="12">• Real-Time Monaco Code Editor</text>
+    <text x="40" y="407" fill="#cbd5e1" font-size="12">• Live Terminal Output Viewer</text>
+    <text x="40" y="429" fill="#cbd5e1" font-size="12">• Active User Presence Avatars</text>
+    <text x="40" y="451" fill="#cbd5e1" font-size="12">• Split Diff Viewer on Conflict</text>
+  </g>
+
+  <!-- ================= TIER 2: REAL-TIME GATEWAY HUB ================= -->
+  <g transform="translate(440, 115)">
+    <!-- Main Column Card -->
+    <rect x="0" y="0" width="320" height="500" rx="14" fill="url(#cardHub)" stroke="#a855f7" stroke-width="2" filter="url(#glowShadow)"/>
+    
+    <!-- Tier Header -->
+    <rect x="0" y="0" width="320" height="52" rx="14" fill="#6b21a8"/>
+    <rect x="0" y="30" width="320" height="22" fill="#6b21a8"/>
+    <text x="160" y="33" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">2. REAL-TIME GATEWAY HUB</text>
+
+    <!-- Component 1: WebSocket Broadcast Hub -->
+    <rect x="20" y="75" width="280" height="120" rx="10" fill="#1e1b4b" stroke="#9333ea" stroke-width="1.5"/>
+    <text x="160" y="102" fill="#f3e8ff" font-size="14" font-weight="bold" text-anchor="middle">WebSocket Event Engine</text>
+    <text x="35" y="128" fill="#d8b4fe" font-size="11.5">• Broadcasts File Changes (to all)</text>
+    <text x="35" y="148" fill="#d8b4fe" font-size="11.5">• Streams Live Agent Tool-Calls</text>
+    <text x="35" y="168" fill="#d8b4fe" font-size="11.5">• Synchronizes Active Presence</text>
+
+    <!-- Component 2: FastAPI REST & Session Manager -->
+    <rect x="20" y="210" width="280" height="120" rx="10" fill="#1e1b4b" stroke="#7e22ce" stroke-width="1.5"/>
+    <text x="160" y="237" fill="#f3e8ff" font-size="14" font-weight="bold" text-anchor="middle">Session &amp; Task Dispatcher</text>
+    <text x="35" y="263" fill="#d8b4fe" font-size="11.5">• Asynchronous Task Queue</text>
+    <text x="35" y="283" fill="#d8b4fe" font-size="11.5">• Background Worker Threads</text>
+    <text x="35" y="303" fill="#d8b4fe" font-size="11.5">• Multi-Room Project Isolation</text>
+
+    <!-- Component 3: Optimistic Concurrency Control (OCC) -->
+    <rect x="20" y="345" width="280" height="135" rx="10" fill="#180d33" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="160" y="372" fill="#fca5a5" font-size="13.5" font-weight="bold" text-anchor="middle">Optimistic Concurrency Control</text>
+    <text x="35" y="398" fill="#cbd5e1" font-size="11.5">• Monotonic File Versioning (v1, v2...)</text>
+    <text x="35" y="418" fill="#ef4444" font-size="11.5">• Detects Race Conditions</text>
+    <text x="35" y="438" fill="#fca5a5" font-size="11.5">• Returns HTTP 409 Conflict Payload</text>
+    <text x="35" y="458" fill="#cbd5e1" font-size="11">• Protects human &amp; AI concurrent writes</text>
+  </g>
+
+  <!-- ================= TIER 3: AGENT & PERSISTENT MEMORY ================= -->
+  <g transform="translate(835, 115)">
+    <!-- Main Column Card -->
+    <rect x="0" y="0" width="320" height="500" rx="14" fill="url(#cardAgent)" stroke="#10b981" stroke-width="2" filter="url(#glowShadow)"/>
+    
+    <!-- Tier Header -->
+    <rect x="0" y="0" width="320" height="52" rx="14" fill="#047857"/>
+    <rect x="0" y="30" width="320" height="22" fill="#047857"/>
+    <text x="160" y="33" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">3. AGENT &amp; PERSISTENT MEMORY</text>
+
+    <!-- AI Agent Core -->
+    <rect x="20" y="70" width="280" height="135" rx="10" fill="#064e3b" stroke="#059669" stroke-width="1.5"/>
+    <text x="160" y="97" fill="#ecfdf5" font-size="14" font-weight="bold" text-anchor="middle">Autonomous Coding Agent</text>
+    <text x="35" y="121" fill="#6ee7b7" font-size="11.5">• LLM Router (litellm / Claude / GPT-4)</text>
+    <text x="35" y="141" fill="#6ee7b7" font-size="11.5">• Tool Suite: read, write, bash, git</text>
+    <text x="35" y="161" fill="#6ee7b7" font-size="11.5">• Observe-Think-Act Iterative Loop</text>
+    <text x="35" y="181" fill="#6ee7b7" font-size="11.5">• Offline Fallback Engine (No API key)</text>
+
+    <!-- Persistent SQLite Memory -->
+    <rect x="20" y="215" width="280" height="135" rx="10" fill="#022c22" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="160" y="240" fill="#fef3c7" font-size="14" font-weight="bold" text-anchor="middle">Persistent SQLite Memory</text>
+    <text x="35" y="264" fill="#fde68a" font-size="11.5">• Project Memory: Conventions &amp; Decisions</text>
+    <text x="35" y="284" fill="#fde68a" font-size="11.5">• Survives sessions &amp; system reboots</text>
+    <text x="35" y="304" fill="#fde68a" font-size="11.5">• Automatic injection into prompt context</text>
+    <text x="35" y="324" fill="#fde68a" font-size="11.5">• Agent writes its own notes via tool</text>
+
+    <!-- Workspace Files & Local Git -->
+    <rect x="20" y="360" width="280" height="120" rx="10" fill="#064e3b" stroke="#34d399" stroke-width="1.2"/>
+    <text x="160" y="386" fill="#ecfdf5" font-size="13.5" font-weight="bold" text-anchor="middle">Workspace &amp; Local Git</text>
+    <text x="35" y="411" fill="#a7f3d0" font-size="11.5">• Project Source Code Files</text>
+    <text x="35" y="431" fill="#a7f3d0" font-size="11.5">• Path-Relevance Context Extractor</text>
+    <text x="35" y="451" fill="#a7f3d0" font-size="11.5">• Local Git Checkpoint &amp; Auto-Commit</text>
+  </g>
+
+  <!-- ================= INTER-TIER ARROWS & FLOW LABELS ================= -->
+  <!-- Arrow 1: Clients -> Hub (User Prompts & Edits) -->
+  <line x1="365" y1="210" x2="435" y2="210" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrowRight)"/>
+  <rect x="368" y="185" width="70" height="20" rx="4" fill="#0284c7"/>
+  <text x="403" y="199" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">PROMPT</text>
+
+  <!-- Arrow 2: Hub -> Clients (WebSocket Broadcast) -->
+  <line x1="435" y1="275" x2="365" y2="275" stroke="#a855f7" stroke-width="3" marker-end="url(#arrowLeft)"/>
+  <rect x="368" y="282" width="70" height="20" rx="4" fill="#7e22ce"/>
+  <text x="403" y="296" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">BROADCAST</text>
+
+  <!-- Arrow 3: Hub -> Agent (Task Dispatch) -->
+  <line x1="760" y1="210" x2="830" y2="210" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrowRight)"/>
+  <rect x="763" y="185" width="70" height="20" rx="4" fill="#0284c7"/>
+  <text x="798" y="199" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">DISPATCH</text>
+
+  <!-- Arrow 4: Agent -> Hub (Tool Stream & Events) -->
+  <line x1="830" y1="275" x2="760" y2="275" stroke="#10b981" stroke-width="3" marker-end="url(#arrowLeft)"/>
+  <rect x="763" y="282" width="70" height="20" rx="4" fill="#059669"/>
+  <text x="798" y="296" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">STREAM</text>
+
+  <!-- ================= BOTTOM LEGEND / TAKEAWAY BANNER ================= -->
+  <rect x="45" y="625" width="1110" height="35" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="600" y="648" fill="#cbd5e1" font-size="12.5" text-anchor="middle">
+    <tspan fill="#38bdf8" font-weight="bold">Key Takeaway:</tspan> Developers share a single AI agent in real time. The agent reads persistent memory, edits files, and broadcasts every action instantly to all screens.
+  </text>
+</svg>
+
+</body>
+</html>
