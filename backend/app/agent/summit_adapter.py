@@ -107,6 +107,8 @@ class SummitAdapter:
         model_override: Optional[str] = None
     ):
         import litellm
+        litellm.telemetry = False
+        litellm.drop_params = True
         settings.reload()
 
         # Set environment variables for all configured provider keys
@@ -131,46 +133,92 @@ class SummitAdapter:
             await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
             return
 
-        # Automatic fallback if default model has no key
+        # Automatic fallback if default model has no key or if the inaccessible llama model is requested
         if not model or (model in ("gpt-4o", "gpt-4o-mini") and not openai_key):
-            if groq_key:
-                model = "groq/llama-3.3-70b-versatile"
-            elif gemini_key:
-                model = "gemini/gemini-2.0-flash"
+            if gemini_key:
+                model = "gemini/gemini-3.8-flash"
+            elif groq_key:
+                model = settings.model_name if (settings.model_name and "groq" in settings.model_name) else "groq/openai/gpt-oss-120b"
             elif anthropic_key:
                 model = "claude-3-5-sonnet-20241022"
             elif openai_key:
                 model = "gpt-4o"
             else:
                 model = "autonomous"
+        elif model in ("groq/llama-3.3-70b-versatile", "llama-3.3-70b-versatile") and groq_key:
+            # Map legacy default to active working Groq model
+            model = settings.model_name if (settings.model_name and settings.model_name != "groq/llama-3.3-70b-versatile") else "groq/openai/gpt-oss-120b"
+        elif model in (
+            "gemini/gemini-2.0-flash",
+            "gemini-2.0-flash",
+            "gemini/gemini-1.5-flash",
+            "gemini-1.5-flash",
+            "gemini/gemini-2.5-flash",
+            "gemini-2.5-flash",
+            "gemini/gemini-pro",
+            "gemini-pro"
+        ):
+            # Automatically remap deprecated Gemini models to the working gemini-3.8-flash
+            model = "gemini/gemini-3.8-flash"
 
         if model == "autonomous":
             await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
             return
 
-        # Normalize model prefix for LiteLLM
-        model_lower = model.lower()
-        if (model_lower.startswith("llama") or model_lower.startswith("mixtral") or model_lower.startswith("gemma") or model_lower.startswith("deepseek")) and not model.startswith("groq/") and not model.startswith("ollama/"):
-            model = f"groq/{model}"
-        elif (model_lower.startswith("gemini-") or model_lower.startswith("models/gemini")) and not model.startswith("gemini/"):
-            model = f"gemini/{model.replace('models/', '')}"
-
-        # Explicit key selection based on model provider
-        if model.startswith("groq/"):
-            api_key = groq_key
-            provider_name = "Groq"
-        elif model.startswith("gemini/"):
-            api_key = gemini_key
-            provider_name = "Gemini"
-        elif model.startswith("openai/") or model.startswith("gpt-"):
-            api_key = openai_key
-            provider_name = "OpenAI"
-        elif model.startswith("anthropic/") or model.startswith("claude"):
-            api_key = anthropic_key
-            provider_name = "Anthropic"
+        # Local LLM handling (e.g. LM Studio on http://127.0.0.1:1234/v1 or Ollama)
+        api_base = None
+        is_local = (
+            model.startswith("local/")
+            or model.startswith("local:")
+            or model.startswith("lm-studio/")
+            or model.startswith("ollama/")
+            or "qwen3.5-9b" in model.lower()
+            or "qwen-9b" in model.lower()
+            or model == "local"
+        )
+        if is_local:
+            provider_name = "Local LLM (LM Studio)"
+            api_key = "not-needed"
+            api_base = settings.LOCAL_LLM_URL or "http://127.0.0.1:1234/v1"
+            clean_name = model.replace("local/", "").replace("local:", "").replace("lm-studio/", "")
+            if clean_name in ("", "local", "qwen-9b", "qwen", "qwen3.5-9b"):
+                clean_name = settings.LOCAL_LLM_MODEL or "qwen/qwen3.5-9b"
+            if not clean_name.startswith("openai/"):
+                model = f"openai/{clean_name}"
+            else:
+                model = clean_name
         else:
-            api_key = settings.api_key
-            provider_name = "configured AI provider"
+            # Normalize model prefix for LiteLLM
+            model_lower = model.lower()
+            if (
+                model_lower.startswith("llama")
+                or model_lower.startswith("mixtral")
+                or model_lower.startswith("gemma")
+                or model_lower.startswith("deepseek")
+                or model_lower.startswith("openai/gpt-oss")
+                or model_lower.startswith("qwen")
+                or model_lower.startswith("allam")
+            ) and not model.startswith("groq/") and not model.startswith("ollama/"):
+                model = f"groq/{model}"
+            elif (model_lower.startswith("gemini-") or model_lower.startswith("models/gemini")) and not model.startswith("gemini/"):
+                model = f"gemini/{model.replace('models/', '')}"
+
+            # Explicit key selection based on model provider
+            if model.startswith("groq/"):
+                api_key = groq_key
+                provider_name = "Groq"
+            elif model.startswith("gemini/"):
+                api_key = gemini_key
+                provider_name = "Gemini"
+            elif model.startswith("openai/") or model.startswith("gpt-"):
+                api_key = openai_key
+                provider_name = "OpenAI"
+            elif model.startswith("anthropic/") or model.startswith("claude"):
+                api_key = anthropic_key
+                provider_name = "Anthropic"
+            else:
+                api_key = settings.api_key
+                provider_name = "configured AI provider"
 
         if not api_key:
             logger.warning(f"No API key found for {provider_name} (model: {model}). Switching to Autonomous Engine.")
@@ -289,18 +337,83 @@ class SummitAdapter:
             )
 
             try:
-                response = await litellm.acompletion(
-                    model=model,
-                    messages=messages,
-                    tools=tools,
-                    api_key=api_key
-                )
+                acompletion_kwargs = {
+                    "model": model,
+                    "messages": messages,
+                    "tools": tools,
+                    "api_key": api_key,
+                }
+                if api_base:
+                    acompletion_kwargs["api_base"] = api_base
+                response = await litellm.acompletion(**acompletion_kwargs)
             except Exception as call_err:
-                # If tool-calling fails due to provider parser error, attempt fallback to Gemini if key available
-                if ("tool_use_failed" in str(call_err) or "Failed to parse tool call" in str(call_err)) and gemini_key and not model.startswith("gemini/"):
-                    logger.warning(f"Tool calling failed on {model} ({call_err}). Retrying with Gemini 2.0 Flash...")
-                    model = "gemini/gemini-2.0-flash"
+                call_err_str = str(call_err).lower()
+                # If model is not found or not accessible on Groq, attempt fallback to working model
+                if ("not exist" in call_err_str or "model_not_found" in call_err_str or "not found" in call_err_str) and model.startswith("groq/"):
+                    fallback_model = settings.model_name if (settings.model_name and settings.model_name != model) else "groq/openai/gpt-oss-120b"
+                    if fallback_model != model:
+                        logger.warning(f"Model '{model}' is not accessible on Groq ({call_err}). Automatically retrying with '{fallback_model}'...")
+                        await self._broadcast(
+                            project_id,
+                            EventNormalizer.agent_message(
+                                project_id=project_id,
+                                message=f"ℹ️ Model `{model}` is not accessible with this Groq key. Automatically switched to `{fallback_model}`."
+                            )
+                        )
+                        model = fallback_model
+                        response = await litellm.acompletion(
+                            model=model,
+                            messages=messages,
+                            tools=tools,
+                            api_key=api_key
+                        )
+                    else:
+                        raise call_err
+                # If Gemini model is deprecated or not available, fallback to gemini-3.8-flash
+                elif ("no longer available" in call_err_str or "not found" in call_err_str) and model.startswith("gemini/") and model != "gemini/gemini-3.8-flash":
+                    logger.warning(f"Gemini model '{model}' is unavailable ({call_err}). Retrying with Gemini 3.8 Flash...")
+                    await self._broadcast(
+                        project_id,
+                        EventNormalizer.agent_message(
+                            project_id=project_id,
+                            message=f"ℹ️ Model `{model}` is deprecated or unavailable. Automatically switched to `gemini/gemini-3.8-flash`."
+                        )
+                    )
+                    model = "gemini/gemini-3.8-flash"
                     api_key = gemini_key
+                    response = await litellm.acompletion(
+                        model=model,
+                        messages=messages,
+                        tools=tools,
+                        api_key=api_key
+                    )
+                # If tool-calling fails due to provider parser error, attempt fallback to Gemini if key available
+                elif ("tool_use_failed" in str(call_err) or "Failed to parse tool call" in str(call_err)) and gemini_key and not model.startswith("gemini/"):
+                    logger.warning(f"Tool calling failed on {model} ({call_err}). Retrying with Gemini 3.8 Flash...")
+                    model = "gemini/gemini-3.8-flash"
+                    api_key = gemini_key
+                    response = await litellm.acompletion(
+                        model=model,
+                        messages=messages,
+                        tools=tools,
+                        api_key=api_key
+                    )
+                # If Gemini is experiencing quota/rate limits (429) or high demand (503), fall back to Groq if key available
+                elif (
+                    any(term in call_err_str for term in ("503", "429", "high demand", "rate", "quota", "resource_exhausted", "unavailable", "exceeded"))
+                    or isinstance(call_err, (litellm.exceptions.RateLimitError, litellm.exceptions.ServiceUnavailableError))
+                ) and groq_key and not model.startswith("groq/"):
+                    fallback_model = "groq/openai/gpt-oss-120b"
+                    logger.warning(f"Gemini API limit or demand issue ({call_err}). Automatically falling back to '{fallback_model}'...")
+                    await self._broadcast(
+                        project_id,
+                        EventNormalizer.agent_message(
+                            project_id=project_id,
+                            message=f"ℹ️ Gemini API quota or rate limit reached (429/503). Automatically switched to `{fallback_model}` to continue without interruption."
+                        )
+                    )
+                    model = fallback_model
+                    api_key = groq_key
                     response = await litellm.acompletion(
                         model=model,
                         messages=messages,
@@ -754,6 +867,20 @@ def health():
             return False
         return True
 
+    def _is_local_model(self, model: Optional[str]) -> bool:
+        if not model:
+            return False
+        m = model.lower()
+        return (
+            m.startswith("local")
+            or m.startswith("lm-studio")
+            or m.startswith("ollama")
+            or "qwen3.5-9b" in m
+            or "qwen-9b" in m
+            or "1234" in m
+            or "11434" in m
+        )
+
     async def run_session(
         self,
         project_id: str,
@@ -777,7 +904,7 @@ def health():
             if model_override == "autonomous":
                 logger.info(f"Running built-in autonomous engine for project: {project_id}")
                 await self._execute_autonomous_task(project_id, workspace_dir, user_prompt)
-            elif self._has_valid_api_key():
+            elif self._has_valid_api_key() or self._is_local_model(model_override or settings.model_name):
                 logger.info(f"Running LLM Agent for project: {project_id} (model: {model_override or settings.model_name})")
                 try:
                     await self._execute_real_llm_agent(project_id, workspace_dir, user_prompt, model_override)

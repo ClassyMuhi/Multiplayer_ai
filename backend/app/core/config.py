@@ -38,12 +38,16 @@ class Settings(BaseSettings):
     # LLM / AI Provider Settings
     AI_MODEL: Optional[str] = None
     AI_API_KEY: Optional[str] = None
-    SUMMIT_MODEL: str = "gpt-4o"
+    SUMMIT_MODEL: str = "groq/openai/gpt-oss-120b"
     GROQ_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
     OPENHANDS_API_KEY: Optional[str] = None
+
+    # Local LLM Settings (LM Studio / Ollama / Local Server)
+    LOCAL_LLM_URL: str = "http://127.0.0.1:1234/v1"
+    LOCAL_LLM_MODEL: str = "openai/qwen/qwen3.5-9b"
 
     # Chroma Vector DB Settings
     CHROMA_PERSIST_DIR: str = "./data/chroma"
@@ -76,6 +80,8 @@ class Settings(BaseSettings):
         self.OPENAI_API_KEY = _clean_str(os.getenv("OPENAI_API_KEY")) or self.OPENAI_API_KEY
         self.ANTHROPIC_API_KEY = _clean_str(os.getenv("ANTHROPIC_API_KEY")) or self.ANTHROPIC_API_KEY
         self.OPENHANDS_API_KEY = _clean_str(os.getenv("OPENHANDS_API_KEY")) or self.OPENHANDS_API_KEY
+        self.LOCAL_LLM_URL = _clean_str(os.getenv("LOCAL_LLM_URL")) or self.LOCAL_LLM_URL
+        self.LOCAL_LLM_MODEL = _clean_str(os.getenv("LOCAL_LLM_MODEL")) or self.LOCAL_LLM_MODEL
 
     @property
     def api_key(self) -> Optional[str]:

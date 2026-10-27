@@ -84,7 +84,8 @@ export const signInWithGoogle = async (): Promise<AuthUserProfile> => {
     } else if (error.code === 'auth/network-request-failed') {
       friendlyMessage = 'Network error during sign in. Please check your internet connection.';
     } else if (error.code === 'auth/unauthorized-domain') {
-      friendlyMessage = 'This domain (localhost) is not authorized in your Firebase Authentication Console.';
+      const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+      friendlyMessage = `This domain (${currentHost}) is not authorized in Firebase Console. Add "${currentHost}" under Firebase Console -> Authentication -> Settings -> Authorized domains, or use localhost / Preset accounts below.`;
     } else if (error.message) {
       friendlyMessage = error.message;
     }

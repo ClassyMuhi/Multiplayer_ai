@@ -67,6 +67,12 @@ class Repository:
             conn.close()
 
     @staticmethod
+    def create_project(id: str, name: str, workspace_path: str, template: str = "blank"):
+        Repository.save_project(project_id=id, name=name, template=template, workspace_path=workspace_path)
+        return {"id": id, "name": name, "template": template, "workspace_path": workspace_path}
+
+
+    @staticmethod
     def get_project(project_id: str) -> Optional[dict]:
         conn = get_connection()
         try:

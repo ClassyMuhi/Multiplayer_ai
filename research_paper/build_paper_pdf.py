@@ -2,7 +2,7 @@ import os
 import subprocess
 from pathlib import Path
 
-PAPER_DIR = Path("research_paper").resolve()
+PAPER_DIR = Path(__file__).resolve().parent
 FIGURES_DIR = PAPER_DIR / "figures"
 HTML_PATH = PAPER_DIR / "paper.html"
 PDF_PATH = PAPER_DIR / "paper.pdf"
@@ -914,6 +914,7 @@ cmd = [
     "--headless",
     "--disable-gpu",
     "--run-all-compositor-stages-before-draw",
+    "--no-pdf-header-footer",
     f"--print-to-pdf={PDF_PATH}",
     f"file:///{HTML_PATH}".replace("\\", "/")
 ]

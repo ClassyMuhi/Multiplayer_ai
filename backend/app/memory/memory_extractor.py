@@ -104,7 +104,26 @@ class MemoryExtractor:
         """
         Uses LLM with LiteLLM to extract structured memory if API key is present.
         """
-        api_key = settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OPENHANDS_API_KEY
+        groq_key = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
+        gemini_key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
+        openai_key = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
+        anthropic_key = settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY")
+
+        model = settings.SUMMIT_MODEL or settings.model_name or "groq/openai/gpt-oss-120b"
+        if "llama" in model.lower():
+            model = "groq/openai/gpt-oss-120b"
+
+        if model.startswith("groq/"):
+            api_key = groq_key or settings.api_key
+        elif model.startswith("gemini/"):
+            api_key = gemini_key or settings.api_key
+        elif model.startswith("openai/") or model.startswith("gpt-"):
+            api_key = openai_key or settings.api_key
+        elif model.startswith("anthropic/") or model.startswith("claude"):
+            api_key = anthropic_key or settings.api_key
+        else:
+            api_key = settings.api_key
+
         if not api_key:
             return None
 
@@ -128,7 +147,7 @@ class MemoryExtractor:
 
         try:
             response = await litellm.acompletion(
-                model=settings.SUMMIT_MODEL,
+                model=model,
                 messages=[
                     {"role": "system", "content": system_instruction},
                     {"role": "user", "content": user_content}
