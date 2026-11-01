@@ -32,7 +32,7 @@ research_paper/
 ## 👥 Authors
 - **Muhilan S** (`muhilan.s.2024.csd@rajalakshmi.edu.in`)
 - **Dhanesh SK** (`dhanesh.sk.2024.csd@rajalakshmi.edu.in`)  
-- **Revathy P** (`reavthy.p@rajalakshmi.edu.in`)  
+- **Revathy P** (`revathy.p@rajalakshmi.edu.in`)  
 *Department of Computer Science and Design, Rajalakshmi Engineering College, Chennai, India*
 
 ---

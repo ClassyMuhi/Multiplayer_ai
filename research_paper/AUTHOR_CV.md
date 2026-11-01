@@ -67,7 +67,7 @@
 ### **Revathy P**
 - **Affiliation:** Department of Computer Science and Design, Rajalakshmi Engineering College
 - **Address:** Rajalakshmi Nagar, Thandalam, Chennai, Tamil Nadu 602105, India
-- **Institutional Email:** `reavthy.p@rajalakshmi.edu.in`
+- **Institutional Email:** `revathy.p@rajalakshmi.edu.in`
 - **Role:** Faculty Mentor / Academic Supervisor / Corresponding Author
 - **Research Interests:** Software Engineering Methodologies, Artificial Intelligence in Education and Development, Distributed Database Systems, Collaborative Computing.
 
@@ -135,6 +135,6 @@ Email: `muhilan.s.2024.csd@rajalakshmi.edu.in`
 Email: `dhanesh.sk.2024.csd@rajalakshmi.edu.in`  
 
 **Revathy P** (Corresponding Author / Faculty Supervisor)  
-Email: `reavthy.p@rajalakshmi.edu.in`  
+Email: `revathy.p@rajalakshmi.edu.in`  
 Department of Computer Science and Design  
 Rajalakshmi Engineering College, Chennai, Tamil Nadu, India  

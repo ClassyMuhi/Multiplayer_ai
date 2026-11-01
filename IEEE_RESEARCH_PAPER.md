@@ -3,7 +3,7 @@
 **Muhilan S**$^1$, **Dhanesh S K**$^2$, **Revathy P**$^3$  
 *Department of Computer Science and Engineering*  
 *Rajalakshmi Engineering College, Chennai, India*  
-$^1$`muhilan.s.2024.csd@rajalakshmi.edu.in`, $^2$`dhanesh.sk.2024.csd@rajalakshmi.edu.in`, $^3$`reavthy.p@rajalakshmi.edu.in`
+$^1$`muhilan.s.2024.csd@rajalakshmi.edu.in`, $^2$`dhanesh.sk.2024.csd@rajalakshmi.edu.in`, $^3$`revathy.p@rajalakshmi.edu.in`
 
 ---
 

@@ -318,7 +318,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="author-dept">Department of Computer Science and Design</div>
       <div class="author-inst">Rajalakshmi Engineering College</div>
       <div class="author-loc">Chennai, India</div>
-      <div class="author-email">reavthy.p@rajalakshmi.edu.in</div>
+      <div class="author-email">revathy.p@rajalakshmi.edu.in</div>
     </div>
   </div>
 </div>
