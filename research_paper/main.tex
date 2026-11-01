@@ -5,6 +5,7 @@
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
+\graphicspath{{figures/}{Figures/}{./}}
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{booktabs}
@@ -41,17 +42,17 @@
 \title{Multiplayer AI Coding Agent with Persistent Project Memory: Architecture, Concurrency Control, and Dual-Tier Knowledge Retention}
 
 \author{
-  \IEEEauthorblockN{Muhilan S\textsuperscript{1}, Dhanesh SK\textsuperscript{2}}
+  \IEEEauthorblockN{Muhilan S\textsuperscript{1}, Dhanesh SK\textsuperscript{2}, Revathy S\textsuperscript{3}}
   \IEEEauthorblockA{\textit{Department of Computer Science and Design} \\
   \textit{Rajalakshmi Engineering College}\\
   Chennai, India \\
-  \textsuperscript{1}muhilan.s.2024.csd@rajalakshmi.edu.in, \textsuperscript{2}dhanesh.sk.2024.csd@rajalakshmi.edu.in}
+  \textsuperscript{1}muhilan.s.2024.csd@rajalakshmi.edu.in, \textsuperscript{2}dhanesh.sk.2024.csd@rajalakshmi.edu.in, \textsuperscript{3}reavthy.p@rajalakshmi.edu.in}
 }
 
 \maketitle
 
 \begin{abstract}
-Contemporary artificial intelligence (AI) coding assistants operate predominantly in single-user, stateless modalities. When multiple software engineers collaborate on a shared codebase, existing developer tools segregate agent interactions into isolated chat threads, discarding architectural decisions, coding conventions, and collective context across programming sessions. Furthermore, concurrent file writes initiated simultaneously by distributed human developers and autonomous coding agents lead to silent file overwrites and code corruption. This paper presents the architecture, formal design, and empirical implementation of a real-time multiplayer AI coding agent workspace with dual-tier persistent project memory. The system introduces: (1) a multi-tenant room and presence gateway that broadcasts agent reasoning tokens, tool invocations, file alterations, and terminal outputs to all collaborators over full-duplex WebSocket channels; (2) an Optimistic Concurrency Control (OCC) file versioning protocol that prevents silent code clobbering and provides visual three-way conflict reconciliation; (3) a dual-tier persistence engine combining an ACID-compliant relational store (SQLite) with a local, offline Hierarchical Navigable Small World (HNSW) vector index (ChromaDB) powered by a 384-dimensional subword hash embedding model; and (4) an intelligent context builder that selectively injects prioritized project facts and relevance-scored code files into dynamically budgeted LLM context windows. We evaluate the system against our automated test suite comprising 23 unit and integration test suites, demonstrating complete directory isolation, 100\% deterministic path-traversal prevention, zero-overhead offline semantic deduplication ($\delta < 0.10$), and real-time multi-client state synchronization under simulated race conditions.
+Most contemporary artificial intelligence (AI) coding assistants are designed for individual developer workflows and offer limited support for collaborative team environments. When multiple software engineers collaborate on a shared codebase, existing developer tools isolate agent interactions into separate chat threads, failing to share architectural decisions, coding conventions, and collective project context across programming sessions. Furthermore, concurrent file modifications initiated simultaneously by developers and autonomous coding agents can lead to conflicting overwrites and lost updates. This paper presents the architecture and implementation of \textbf{Summit}, a real-time multiplayer AI coding agent workspace with dual-tier persistent project memory. The system introduces: (1) a multi-tenant room and presence gateway that broadcasts agent reasoning tokens, tool invocations, file alterations, and terminal outputs to all collaborators over full-duplex WebSocket channels; (2) an Optimistic Concurrency Control (OCC) file versioning protocol that intercepts concurrent write conflicts and provides side-by-side reconciliation; (3) a dual-tier persistence engine combining an ACID-compliant relational store (SQLite) with a local vector index (ChromaDB) utilizing a 384-dimensional subword hash embedding model; and (4) an intelligent context builder that selectively injects prioritized project facts and relevance-scored code files into dynamically budgeted LLM context windows. We evaluate the system using 23 automated unit and integration tests across four core functional areas, verifying workspace path sandboxing, event normalization, concurrency conflict detection, offline semantic deduplication ($\delta < 0.10$), and multi-client state synchronization under simulated race conditions.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -63,34 +64,34 @@ Multiplayer Software Engineering, AI Coding Agent, Persistent Project Memory, Op
 The integration of Large Language Models (LLMs) into modern software engineering has transformed developer productivity through automated program synthesis, test generation, and intelligent code refactoring \cite{chen2021evaluating, ziegler2024measuring, ross2023programmer}. However, the prevailing paradigm of AI-assisted software development remains fundamentally solitary and transient. Commercial and open-source coding assistants (e.g., GitHub Copilot, Cursor, OpenHands) execute within isolated local client windows or ephemeral container instances. Consequently, several critical challenges emerge in collaborative team environments:
 
 \begin{enumerate}
-    \item \textbf{Contextual Isolation:} When Developer $A$ instructs an agent to adopt a specific architectural pattern or authentication standard, that decision remains confined to Developer $A$'s ephemeral context window. When Developer $B$ subsequently joins the repository, the agent possesses no historical recollection of prior architectural choices, resulting in contradictory code implementations.
-    \item \textbf{Silent Concurrency Clobbering:} When multiple human developers and an autonomous coding agent concurrently modify files within a shared workspace, standard file systems overwrite disk buffers blindly. Stale client buffers routinely erase agent modifications, and multi-file agent patches clobber human edits without warning \cite{kung1981optimistic, ellis1989concurrency}.
+    \item \textbf{Contextual Isolation:} In team software development, engineers continually establish design decisions, API contracts, and coding conventions. When using individual AI assistants, these decisions remain confined to isolated chat sessions. When another team member later interacts with an assistant on the same project, the agent has no memory of earlier decisions, often producing inconsistent or conflicting code. Persistent project memory is needed so that all developers and the agent share a durable record of architectural guidelines.
+    \item \textbf{Concurrent File Modification Conflicts:} When developers and autonomous coding agents work simultaneously on a shared codebase, concurrent writes to the same files can produce conflicts. If an engineer edits a file while an autonomous agent executes a multi-file modification, one set of changes can overwrite the other without warning \cite{kung1981optimistic, ellis1989concurrency}. Robust concurrency control is therefore necessary to intercept writes based on stale file states and provide clear resolution mechanisms before modifications are saved.
     \item \textbf{Ephemeral Session Memory:} Most developer tools rely strictly on short-term sliding conversational windows. Once an IDE instance restarts or a chat thread is cleared, project facts, debugging discoveries, and design rationales are irreversibly lost \cite{xia2023keep}.
     \item \textbf{Provider Lock-In and Offline Fragility:} Many coding assistants depend strictly on commercial cloud inference APIs. If an external API key is revoked or connectivity degrades, development stalls unless an autonomous local fallback mechanism is embedded.
 \end{enumerate}
 
-To overcome these foundational limitations, this paper presents the complete technical architecture and implementation of \textbf{Summit}, a collaborative multiplayer web development environment and shared AI coding agent with persistent project memory. Unlike single-tenant assistants, Summit connects multiple distributed developers to the \textit{exact same project room} governed by \textit{one shared AI coding agent}. 
+To address these challenges, collaborative development environments require two foundational capabilities: persistent project memory to preserve architectural decisions across sessions, and shared AI agent access so that distributed team members can observe, direct, and synchronize with the same agent in real time. This paper presents the technical architecture and implementation of \textbf{Summit}, a collaborative multiplayer web development environment and shared AI coding agent with persistent project memory. Unlike single-tenant assistants, Summit connects multiple distributed developers to the \textit{exact same project room} governed by \textit{one shared AI coding agent}. 
 
 \subsection{Research Contributions}
 The primary contributions of this paper are:
 \begin{itemize}
     \item \textbf{Multiplayer Presence and Shared Agent Event Stream:} A centralized WebSocket broadcast bus that coordinates room presence, streaming agent tokens, tool invocations (\texttt{read\_file}, \texttt{write\_file}, \texttt{run\_terminal}, \texttt{save\_memory}, \texttt{git\_checkpoint}), and execution controls (\textsf{START}, \textsf{PAUSE}, \textsf{RESUME}, \textsf{STOP}).
-    \item \textbf{Optimistic Concurrency Control (OCC) File Versioning:} A monotonic version-tracking protocol that checks expected versus server file versions upon write, returning HTTP 409 conflict payloads and visual difference resolution modals to prevent data corruption during human-agent races.
-    \item \textbf{Dual-Tier Persistent Memory Engine:} An architectural synthesis combining an ACID-compliant SQLite relational database with an offline ChromaDB vector store. We formulate a local 384-dimensional n-gram hashing embedding function that requires zero external transformer downloads, running 100\% offline with cosine deduplication ($\delta < 0.10$).
+    \item \textbf{Optimistic Concurrency Control (OCC) File Versioning:} A monotonic version-tracking protocol that checks expected versus server file versions upon write, returning HTTP 409 conflict payloads and visual difference resolution modals to intercept conflicting writes during concurrent human and agent edits.
+    \item \textbf{Dual-Tier Persistent Memory Engine:} An architectural synthesis combining an ACID-compliant SQLite relational database with a local ChromaDB vector store. We formulate a local 384-dimensional n-gram hashing embedding function that runs locally without external model downloads, supporting cosine-based deduplication ($\delta < 0.10$).
     \item \textbf{Intelligent Context Builder and Memory Extractor:} A multi-category prompt budgeting pipeline that scores workspace files by token and topic relevance, extracts enduring architecture decisions while filtering trivial conversational chatter, and structures injected prompts under strict size budgets.
-    \item \textbf{Empirical Verification:} Empirical validation across 23 comprehensive automated backend tests and live end-to-end multi-client collaborative tasks without fabricating external evaluation benchmarks.
+    \item \textbf{Empirical Verification:} Empirical validation across 23 automated unit and integration tests covering workspace security, event normalization, concurrency conflict handling, and memory persistence without fabricating external evaluation benchmarks.
 \end{itemize}
 
 \section{Related Work}
 
-\subsection{AI Coding Agents and Autonomous Program Synthesis}
-Recent advances in foundation models trained on code, such as OpenAI Codex \cite{chen2021evaluating} and CodeXGLUE benchmarks \cite{lu2021codexglue}, have enabled agents capable of iterative multi-step reasoning. Conversational automated program repair systems \cite{xia2023keep} demonstrate that multi-turn dialog improves bug fix success rates. However, contemporary agentic architectures (such as OpenHands and Devin) execute within single-tenant execution sandboxes. They assume a solitary user workflow, leaving multiplayer synchronization and collective context unaddressed.
+\subsection{AI-Assisted Software Development Tools}
+Recent advances in foundation models trained on code, such as OpenAI Codex \cite{chen2021evaluating} and CodeXGLUE benchmarks \cite{lu2021codexglue}, have enabled tools capable of automated code synthesis \cite{yin2020natural}, test generation, and iterative reasoning. Developer assistants such as GitHub Copilot and Cursor assist individual programmers during code authoring within their local environments \cite{ziegler2024measuring}. More autonomous systems, including OpenHands and Devin, execute multi-turn tasks by invoking tools and terminal commands in dedicated sandboxes. However, these tools are predominantly engineered for single-developer workflows. When teams collaborate on a shared codebase, existing developer tools typically maintain separate conversational threads for each user, meaning that agent actions, architectural rationales, and project knowledge are not automatically synchronized across the team. Summit addresses this gap by introducing a shared presence layer and WebSocket event stream, enabling multiple developers to observe, interact with, and steer a shared AI coding agent collaboratively.
 
 \subsection{Collaborative Software Engineering and Concurrency Control}
-Collaborative software development has historically relied on asynchronous version control systems (e.g., Git) or synchronous groupware systems \cite{storey2017social}. In synchronous editing environments, Operational Transformation (OT) and Conflict-Free Replicated Data Types (CRDTs) \cite{ellis1989concurrency} resolve character-level conflicts. However, when autonomous agents execute multi-file refactoring operations alongside human programmers, fine-grained character OT introduces extreme operational complexity and semantic inconsistencies. Classical Optimistic Concurrency Control (OCC) \cite{kung1981optimistic} provides a robust, monotonic transaction-validation mechanism. In this work, we adapt OCC at the file-version level to detect and resolve human-agent edit collisions gracefully.
+Collaborative software development has historically relied on asynchronous version control systems (e.g., Git) or synchronous groupware systems \cite{storey2017social}. In synchronous editing environments, Operational Transformation (OT) and Conflict-Free Replicated Data Types (CRDTs) \cite{ellis1989concurrency} resolve character-level conflicts. However, when autonomous agents execute multi-file refactoring operations alongside human programmers, character-level OT can introduce operational complexity and intermediate syntax invalidity. Classical Optimistic Concurrency Control (OCC) \cite{kung1981optimistic} provides a robust transaction-validation mechanism. In this work, we adapt OCC at the file-version level to detect and resolve human-agent edit collisions cleanly.
 
-\subsection{Retrieval-Augmented Generation and Vector Indexing}
-Retrieval-Augmented Generation (RAG) \cite{lewis2020retrieval} enhances language model generation by querying external knowledge stores. In software engineering, deep code search \cite{gu2018deep} and knowledge graphs \cite{gao2022constructing} retrieve relevant snippets to ground model completions. Dense vector retrieval architectures often utilize Hierarchical Navigable Small World (HNSW) graphs \cite{malkov2020efficient} for sub-linear search complexity \cite{johnson2021billion}. While traditional RAG systems rely on heavyweight transformer embedding models (e.g., BERT-based sentence transformers), local developer environments require instantaneous initialization and zero-network footprint. We address this through an offline subword hashing projection that embeds semantic text without cloud reliance.
+\subsection{Persistent Memory and Context Retrieval in AI Systems}
+Retrieval-Augmented Generation (RAG) \cite{lewis2020retrieval} enhances language model generation by querying external knowledge stores. In software engineering, code search techniques \cite{gu2018deep} and knowledge representations \cite{gao2022constructing} retrieve relevant snippets to ground model completions. Dense vector retrieval architectures often utilize Hierarchical Navigable Small World (HNSW) graphs \cite{malkov2020efficient} for sub-linear search complexity \cite{johnson2021billion}. Most conventional RAG pipelines rely on pre-trained transformer embedding models \cite{vaswani2017attention} or cloud embedding APIs. While accurate, these models introduce substantial memory overhead or require external network connectivity, which may not be ideal for lightweight local developer environments. In Summit, we combine relational storage in SQLite with a local vector index in ChromaDB using a 384-dimensional n-gram hashing function, providing practical semantic deduplication and retrieval without external model dependencies.
 
 \subsection{Human-AI Pair Programming and Cognitive Context}
 Empirical evaluations of developer interaction with AI assistants highlight the friction caused by context re-explanation \cite{vaithilingam2022expectation, sarker2023towards}. Programmers frequently express frustration when models forget previously agreed conventions or require repetitive prompt scaffolding \cite{ross2023programmer}. By establishing persistent project-level memory, our system bridges this gap, preserving collective project knowledge across team members and working sessions.
@@ -101,7 +102,7 @@ The overall architecture of the system is depicted in Fig.~\ref{fig:architecture
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.98\textwidth]{figures/fig1_system_architecture.png}
+\includegraphics[width=0.98\textwidth]{fig1_system_architecture.png}
 \caption{Overall System Architecture: Collaborative web clients connect via WebSockets and REST APIs to the centralized FastAPI server. The \texttt{SessionManager} routes structured events to the shared AI Agent Orchestrator, which queries the Dual-Tier Persistent Memory System and executes safe file operations through the Sandboxed Workspace Manager.}
 \label{fig:architecture}
 \end{figure*}
@@ -138,7 +139,7 @@ class AppEvent(BaseModel):
     timestamp: datetime
     data: Dict[str, Any]
 \end{lstlisting}
-The \texttt{EventNormalizer} encapsulates payload formatting, guaranteeing that all collaborators observe identical execution states in sub-millisecond real time.
+The \texttt{EventNormalizer} formats all outgoing and incoming messages into standardized \texttt{AppEvent} payloads. This structured schema ensures that user messages, agent status updates, tool invocations, terminal outputs, and file alterations are broadcast consistently to all connected clients over active WebSocket channels.
 
 \subsection{Sandboxed Workspace and Path Traversal Security}
 To safeguard host environments against unauthorized directory traversal or arbitrary file tampering, the \texttt{WorkspaceManager} enforces rigorous boundary checks. For any relative path $r$ provided by human users or the autonomous agent, the resolved absolute path $P_{\text{target}}$ must strictly satisfy:
@@ -173,7 +174,7 @@ To eliminate race conditions between concurrent human edits and autonomous agent
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig4_occ_workflow.png}
+\includegraphics[width=\columnwidth]{fig4_occ_workflow.png}
 \caption{Optimistic Concurrency Control (OCC) Workflow: The server validates expected versus current versions. In the event of a mismatch ($v_{\text{server}} \neq v_{\text{expected}}$), an HTTP 409 conflict payload halts the write and summons the client resolution modal.}
 \label{fig:occ}
 \end{figure}
@@ -220,17 +221,17 @@ A developer can pause the agent mid-task to inspect partial edits, resume execut
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.98\textwidth]{figures/fig2_multiplayer_sequence.png}
+\includegraphics[width=0.98\textwidth]{fig2_multiplayer_sequence.png}
 \caption{Multiplayer Sequence Diagram: Alice initiates a collaborative coding instruction. The shared AI agent streams thoughts, tool invocations, and test executions simultaneously to Alice and Bob. Concurrently, Bob attempts an edit against an outdated buffer, triggering OCC conflict interception and resolution.}
 \label{fig:sequence}
 \end{figure*}
 
 \subsection{Dual-Tier Persistent Memory System}
-The memory architecture addresses two conflicting requirements: relational reliability with transactional integrity, and fuzzy semantic retrieval with deduplication. We resolve this by coupling SQLite with ChromaDB, as illustrated in Fig.~\ref{fig:mem_lifecycle}.
+The memory architecture adopts a dual-tier design to separate structured relational records from vector similarity indexing, as illustrated in Fig.~\ref{fig:mem_lifecycle}. SQLite serves as the transactional system of record for structured entities, conversation logs, and categorized memory records with importance weights. ChromaDB operates as a local vector store for semantic similarity search and near-duplicate detection.
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig3_memory_lifecycle.png}
+\includegraphics[width=\columnwidth]{fig3_memory_lifecycle.png}
 \caption{Dual-Tier Persistent Memory Lifecycle: The extraction engine filters trivial noise, classifies persistent facts, enforces semantic deduplication via ChromaDB ($\delta < 0.10$), persists to SQLite, and dynamically budgets context for downstream agent runs.}
 \label{fig:mem_lifecycle}
 \end{figure}
@@ -239,25 +240,26 @@ The memory architecture addresses two conflicting requirements: relational relia
 Structured entities are managed using SQLAlchemy 2.0 ORM over SQLite:
 \begin{itemize}
     \item \texttt{projects}: Primary workspace registry, root path, and metadata.
-    \item \texttt{conversation\_messages}: Complete chronologically ordered transcripts of human prompts and agent replies.
+    \item \texttt{conversation\_messages}: Chronologically ordered transcripts of human prompts and agent replies.
     \item \texttt{project\_memories}: Explicit and extracted facts, tagged with \texttt{memory\_type} (\texttt{architecture\_decision}, \texttt{coding\_convention}, \texttt{bug\_solution}, \texttt{project\_fact}, \texttt{general}), \texttt{importance} $\in [0.0, 1.0]$, and active status \texttt{is\_active}.
     \item \texttt{agent\_runs}: Historical logs of agent executions and durations.
     \item \texttt{file\_changes} and \texttt{file\_versions}: OCC version counters and change logs.
 \end{itemize}
 
 \subsubsection{Tier 2: Semantic Vector Store (ChromaDB)}
-To enable semantic similarity search without runtime external dependencies, we implement \texttt{LocalEmbeddingFunction}. Given an input document text $T$, the function tokenizes words and character trigrams, projecting tokens into a normalized dense vector $\mathbf{v} \in \mathbb{R}^{384}$:
+To enable semantic similarity search and deduplication without requiring external neural network downloads or GPU hardware, we implement \texttt{LocalEmbeddingFunction}. Given an input document text $T$, the function tokenizes words and character trigrams, projects each token into a 384-dimensional vector using a deterministic hash function, and applies positional weighting:
 \begin{equation}
 v_k = \sum_{t \in \text{tokens}(T)} \frac{w_t}{\sqrt{\text{pos}(t) + 1}} \cdot \mathbb{I}(\text{hash}(t) \equiv k \!\!\!\pmod{384})
 \end{equation}
-where $w_t$ provides differential weighting for whole words versus character trigrams. The resulting vector is normalized under the $L_2$ norm:
+where $w_t$ differentiates whole words from subword character trigrams. The resulting vector is normalized to unit length under the $L_2$ norm:
 \begin{equation}
 \hat{\mathbf{v}} = \frac{\mathbf{v}}{\|\mathbf{v}\|_2 + \epsilon}
 \end{equation}
-Vector similarity is computed in cosine space using an HNSW graph index:
+ChromaDB indexes these vectors using an HNSW graph in cosine distance space:
 \begin{equation}
 D_{\text{cosine}}(\mathbf{u}, \mathbf{v}) = 1 - (\mathbf{u} \cdot \mathbf{v})
 \end{equation}
+While this hash-based embedding is an approximation compared to contextual neural embeddings, it executes deterministically, runs completely offline, and provides effective distance discrimination for near-duplicate detection.
 
 \subsubsection{Semantic Deduplication Protocol}
 Before inserting a new memory item into SQLite, the service queries ChromaDB for the closest existing document in the project. If the minimum distance satisfies:
@@ -369,13 +371,19 @@ Version Control & \texttt{git\_service.py} & Subprocess Git Porcelain API \\
 \section{Experimental Setup and Results}
 
 \subsection{Experimental Environment}
-The system implementation and verification experiments were executed on an AMD Ryzen-based workstation running Windows 11 with Python 3.10+, SQLite 3.45, ChromaDB 0.4+, and Node.js v20. Automated test suites were executed using \texttt{pytest} and \texttt{pytest-asyncio} within an isolated Python virtual environment.
+The system implementation and verification experiments were executed on an AMD Ryzen-based workstation running Windows 11 with Python 3.10+, SQLite 3.45, ChromaDB 0.4+, and Node.js v20. Automated tests were executed using \texttt{pytest} and \texttt{pytest-asyncio} within an isolated Python virtual environment.
 
-\subsection{Empirical Test Suite Execution}
-To adhere strictly to verifiable academic reporting, we report actual measurements derived from the execution of our comprehensive test suites. All 23 unit and integration tests passed with 100\% success rate in 2.17 seconds. The breakdown of test modules, target features, and execution verification is detailed in Table~\ref{tab:test_results}.
+\subsection{Empirical Test Execution and Categorization}
+To evaluate the system components systematically, we executed 23 automated unit and integration tests across four core functional areas. All 23 tests completed successfully in 2.17 seconds. The breakdown of test modules, target features, and execution verification is detailed in Table~\ref{tab:test_results}. The evaluation encompasses four distinct categories:
+\begin{enumerate}
+    \item \textbf{Workspace Sandboxing and File Operations (4 tests):} Evaluates atomic file reading and writing in \texttt{test\_workspace.py}, verifying that relative path resolution routines correctly block traversal sequences outside the project root.
+    \item \textbf{REST Endpoints and Event Normalization (8 tests):} Validates project creation, retrieval, and deletion in \texttt{test\_api.py}, and tests typed \texttt{AppEvent} serialization in \texttt{test\_event\_normalizer.py} to ensure consistent payload structures across WebSocket channels.
+    \item \textbf{Concurrency Control and Version Tracking (5 tests):} Evaluates optimistic concurrency control under concurrent modification scenarios in \texttt{test\_multiplayer\_memory.py}, confirming that writes with outdated version numbers trigger HTTP 409 conflict responses, as well as testing automated Git checkpoint creation.
+    \item \textbf{Memory Persistence and Semantic Retrieval (6 tests):} Assesses relational schema persistence in SQLite, ChromaDB vector indexing and cross-project isolation in \texttt{test\_chroma\_store.py}, cosine-based near-duplicate rejection ($\delta < 0.10$), and rule-based noise filtering for trivial messages in \texttt{test\_memory\_extractor.py}.
+\end{enumerate}
 
 \begin{table}[!t]
-\caption{Empirical Automated Test Suite Results}
+\caption{Empirical Automated Test Results}
 \label{tab:test_results}
 \centering
 \resizebox{\columnwidth}{!}{%
@@ -424,7 +432,7 @@ The Optimistic Concurrency Control mechanism was verified under simulated race c
     \item Collaborator $A$ submitted an edit with expected version $v_{\text{exp}} = 1$. The write succeeded, incrementing server version to $v=2$.
     \item Collaborator $B$ submitted a concurrent write with stale expected version $v_{\text{exp}} = 1$.
     \item The \texttt{WorkspaceManager} detected the version disparity ($v_{\text{curr}} = 2 \neq 1$) and immediately raised \texttt{FileConflictError}.
-    \item The endpoint intercepted the error and returned HTTP 409 Conflict with the server buffer intact, confirming that silent clobbering was prevented.
+    \item The endpoint intercepted the error and returned an HTTP 409 Conflict response containing the current server content and version, confirming that the conflicting write was intercepted and prevented from overwriting the file.
 \end{enumerate}
 
 \subsection{Security and Path Traversal Prevention}
@@ -434,18 +442,18 @@ The security boundary was evaluated in \texttt{test\_workspace.py::test\_path\_t
     \item \texttt{..\\..\\windows\\system32\\calc.exe}
     \item \texttt{/etc/passwd}
 \end{itemize}
-were systematically intercepted by \texttt{validate\_safe\_path()}, raising \texttt{WorkspaceSecurityError} in 100\% of test cases and proving that workspace boundaries cannot be breached.
+were intercepted by \texttt{validate\_safe\_path()}, raising \texttt{WorkspaceSecurityError} across all evaluated test cases and confirming that paths resolving outside the designated workspace root are rejected.
 
 \subsection{Offline Vector Store and Deduplication Validation}
 The vector subsystem was validated across multiple dimensions in \texttt{test\_chroma\_store.py}:
 \begin{itemize}
     \item \textbf{Cross-Session Persistence:} Verified that documents indexed in ChromaDB remain retrievable after the persistent client instance is torn down and reinitialized from disk.
     \item \textbf{Project Isolation:} Verified that searching within Project $A$ never returns records belonging to Project $B$, even when queries share identical keyword tokens.
-    \item \textbf{Deduplication Threshold:} Demonstrated that near-duplicate memory insertions ($\Delta \text{cosine} < 0.10$) trigger document updates rather than duplicate records, bounding index growth.
+    \item \textbf{Deduplication Threshold:} Demonstrated that near-duplicate memory insertions with cosine distance below the threshold ($\delta < 0.10$) trigger an in-place update of the existing memory item rather than creating redundant duplicate records.
 \end{itemize}
 
 \subsection{Proposed Future Evaluations}
-While the core architecture has been thoroughly verified through unit and integration test suites, large-scale multi-team human-subject longitudinal studies have not yet been conducted. We explicitly identify systematic human-in-the-loop developer velocity benchmarks, comparative pass@$k$ metrics across multi-agent vs. single-agent teams, and latency scaling beyond 50 concurrent room collaborators as proposed evaluations for future work.
+While system functionality has been verified through our automated test suite, longitudinal studies with software engineering teams have not yet been conducted. We identify systematic developer velocity evaluations, comparative task completion metrics across multi-user vs. single-user agent settings, and latency scaling with larger numbers of concurrent room collaborators as valuable directions for future empirical research.
 
 \section{Discussion and Limitations}
 
@@ -454,20 +462,21 @@ While the core architecture has been thoroughly verified through unit and integr
 Our design prioritizes file-level OCC over character-level Operational Transformation (OT) or CRDTs. While OT allows concurrent typing within the same line, autonomous AI coding agents typically perform coarse-grained, multi-line AST refactoring. Merging human keystrokes mid-generation during an agent tool write frequently corrupts program syntax. OCC provides a crisp transactional boundary that alerts the developer before broken syntax is committed.
 
 \subsubsection{Local Hash Embeddings vs. Transformer Checkpoints}
-The 384-dimensional n-gram hashing embedding function guarantees 100\% offline availability, sub-millisecond indexing, and zero external downloads. However, hash-based embeddings lack the deep contextual semantics of transformer-based embeddings (e.g., text-embedding-3-small). For domain-specific codebases with complex synonymy, hybrid search combining BM25 and dense semantic embeddings presents a fruitful optimization.
+The 384-dimensional n-gram hashing embedding function operates locally, computes representations rapidly, and requires zero external model downloads. However, hash-based representations lack the deep contextual semantics captured by trained transformer-based embeddings (e.g., neural text embedding models). For complex codebases with subtle synonymy, combining keyword-based techniques with dense semantic representations and evaluating code generation robustness \cite{stutz2024evaluating} offers a promising direction.
 
 \subsection{Current Limitations}
 \begin{enumerate}
-    \item \textbf{Single-Host Subprocess Execution:} The terminal runner currently executes commands directly within the backend host environment. In untrusted public cloud environments, commands must be isolated within ephemeral Docker or Firecracker microVM sandboxes.
-    \item \textbf{Synchronous Turn Execution:} The shared AI agent executes turns sequentially per project room. If Developer $A$ and Developer $B$ trigger simultaneous complex instructions, requests are queued rather than handled through bifurcated parallel sub-agents.
-    \item \textbf{Context Truncation Limits:} While prompt budgeting prevents context overflow, exceptionally large monolithic files (>10,000 lines) are truncated at configured caps (6,000 characters), occasionally omitting peripheral helper routines.
+    \item \textbf{Lack of Containerized Terminal Sandboxing:} Terminal commands executed by the agent or users run as child subprocesses directly on the backend host system. Although workspace path boundaries are validated, execution is not isolated within virtualized containers (such as Docker or microVMs), which presents security constraints for untrusted or multi-tenant deployments.
+    \item \textbf{Sequential Agent Turn Execution:} Within each project room, the shared AI agent processes user instructions sequentially. If multiple developers issue prompts concurrently, subsequent requests are placed into a queue rather than handled simultaneously by parallel specialized sub-agents.
+    \item \textbf{Context Window and File Truncation Constraints:} To prevent prompt overflow and respect language model context budgets, candidate files are truncated at 6,000 characters and memory context is budgeted at 2,500 characters. For large source files or complex modules, this truncation can omit helper routines or peripheral declarations.
+    \item \textbf{Need for Improved Semantic Memory Retrieval:} The local 384-dimensional n-gram hashing function provides fast, dependency-free vector projection without requiring neural model checkpoints. However, it relies on surface-level character and word n-grams rather than contextual semantic embeddings, which limits its ability to recognize nuanced conceptual synonyms or paraphrased queries during retrieval.
 \end{enumerate}
 
 \section{Conclusion and Future Work}
 
-In this paper, we introduced the architecture, design principles, and implementation of a multiplayer AI coding agent with persistent project memory. By replacing solitary, ephemeral chat windows with a collaborative WebSocket presence hub, developers interact with a single shared AI coding agent that maintains continuous awareness of collective programming activities. Our Optimistic Concurrency Control protocol prevents silent code corruption during concurrent human-agent editing, while our dual-tier persistence engine (SQLite and ChromaDB) ensures that architectural decisions and coding conventions survive across programming sessions without runtime cloud dependencies. Empirical testing across 23 unit and integration suites validates that the system provides secure workspace isolation, zero-overhead offline semantic deduplication, and resilient real-time synchronization.
+In this paper, we presented Summit, a collaborative web-based development environment and shared AI coding agent with persistent project memory. By introducing a centralized WebSocket event stream, Summit connects distributed developers into a shared room where team members can co-direct and observe a single AI coding agent in real time. An optimistic concurrency control protocol intercepts conflicting file modifications between developers and autonomous agent tools, providing side-by-side reconciliation to protect codebase integrity. A dual-tier memory system, combining SQLite for structured relational data with a local ChromaDB instance utilizing a 384-dimensional n-gram hashing embedding function, retains architectural decisions and coding standards across programming sessions without external model dependencies. Automated evaluation comprising 23 unit and integration tests across four core categories confirmed the functional correctness of workspace sandboxing, event normalization, concurrency conflict detection, and memory deduplication.
 
-Future work will expand upon these foundations by: (1) integrating containerized Firecracker microVM sandboxes for untrusted terminal execution; (2) incorporating fine-grained AST-aware merge drivers for automated three-way file conflict resolution; (3) introducing multi-agent specialization where distinct architectural, testing, and documentation sub-agents collaborate within the shared room; and (4) conducting longitudinal user studies with professional software engineering teams to measure impact on team velocity and architectural consistency.
+Future work will focus on addressing current architectural limitations: (1) integrating containerized sandboxes (such as Docker or microVMs) to isolate terminal command execution; (2) supporting parallel multi-agent collaboration with specialized roles for testing, refactoring, and documentation; (3) implementing hybrid memory retrieval combining lexical search with compact transformer embeddings; and (4) conducting empirical user studies with professional software engineering teams to evaluate collaboration patterns and developer productivity in shared AI programming workflows.
 
 \section*{Acknowledgment}
 The authors thank the Department of Computer Science and Design at Rajalakshmi Engineering College for supporting this research and providing computational resources.
