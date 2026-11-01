@@ -209,7 +209,7 @@ def add_authors_table(doc):
     authors = [
         ("Muhilan S", "Department of Computer Science and Design", "Rajalakshmi Engineering College", "Chennai, India", "muhilan.s.2024.csd@rajalakshmi.edu.in"),
         ("Dhanesh SK", "Department of Computer Science and Design", "Rajalakshmi Engineering College", "Chennai, India", "dhanesh.sk.2024.csd@rajalakshmi.edu.in"),
-        ("Revathy S", "Department of Computer Science and Design", "Rajalakshmi Engineering College", "Chennai, India", "reavthy.p@rajalakshmi.edu.in")
+        ("Revathy P", "Department of Computer Science and Design", "Rajalakshmi Engineering College", "Chennai, India", "reavthy.p@rajalakshmi.edu.in")
     ]
 
     for col_idx, (name, dept, inst, loc, email) in enumerate(authors):

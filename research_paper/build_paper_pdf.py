@@ -314,7 +314,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="author-email">dhanesh.sk.2024.csd@rajalakshmi.edu.in</div>
     </div>
     <div class="author-card">
-      <div class="author-name">Revathy S</div>
+      <div class="author-name">Revathy P</div>
       <div class="author-dept">Department of Computer Science and Design</div>
       <div class="author-inst">Rajalakshmi Engineering College</div>
       <div class="author-loc">Chennai, India</div>

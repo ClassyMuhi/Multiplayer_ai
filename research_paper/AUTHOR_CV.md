@@ -64,7 +64,7 @@
 
 ## 3. Corresponding Author / Faculty Supervisor CV
 
-### **Revathy S**
+### **Revathy P**
 - **Affiliation:** Department of Computer Science and Design, Rajalakshmi Engineering College
 - **Address:** Rajalakshmi Nagar, Thandalam, Chennai, Tamil Nadu 602105, India
 - **Institutional Email:** `reavthy.p@rajalakshmi.edu.in`
@@ -94,7 +94,7 @@
 
 > **Dhanesh SK** is an undergraduate researcher in the Department of Computer Science and Design at Rajalakshmi Engineering College, Chennai, India. His research focuses on semantic information retrieval, offline vector embeddings, and retrieval-augmented generation (RAG) architectures. He contributed significantly to the persistent memory lifecycle and offline semantic deduplication mechanisms within the Summit project.
 
-> **Revathy S** is a faculty member in the Department of Computer Science and Design at Rajalakshmi Engineering College, Chennai, India. Her academic and research specializations include advanced software engineering, distributed computing, database systems, and artificial intelligence. She has supervised numerous student research initiatives in intelligent system design and software verification.
+> **Revathy P** is a faculty member in the Department of Computer Science and Design at Rajalakshmi Engineering College, Chennai, India. Her academic and research specializations include advanced software engineering, distributed computing, database systems, and artificial intelligence. She has supervised numerous student research initiatives in intelligent system design and software verification.
 
 ---
 
@@ -134,7 +134,7 @@ Email: `muhilan.s.2024.csd@rajalakshmi.edu.in`
 **Dhanesh SK** (Co-Author)  
 Email: `dhanesh.sk.2024.csd@rajalakshmi.edu.in`  
 
-**Revathy S** (Corresponding Author / Faculty Supervisor)  
+**Revathy P** (Corresponding Author / Faculty Supervisor)  
 Email: `reavthy.p@rajalakshmi.edu.in`  
 Department of Computer Science and Design  
 Rajalakshmi Engineering College, Chennai, Tamil Nadu, India  
